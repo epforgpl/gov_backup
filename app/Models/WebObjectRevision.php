@@ -16,4 +16,9 @@ class WebObjectRevision
         $this->cts = $data['cts'];
     }
 
+    public function getTime()
+    {
+        return $this->cts;
+    }
+
 }
