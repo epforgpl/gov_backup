@@ -18,34 +18,47 @@ In case this method wasn't used - $_page variable will be defined here with empt
 </head>
 <body>
 
-<div class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a href="/" class="navbar-brand">GovBackup</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <form action="/search">
-                        <input type="text" name="q" />
-                        <input style="display: none;" type="submit" />
-                    </form>
-                </li>
-            </ul>
+<div id="page">
 
-            <ul class="nav navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/about" target="_blank">About</a>
-                </li>
-            </ul>
+    <div id="header">
+        <div class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a href="/" class="navbar-brand">GovBackup / Kancelaria Prezesa Rady Ministrów</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
 
+                    <!--
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <form action="/search">
+                                <input type="text" name="q" />
+                                <input style="display: none;" type="submit" />
+                            </form>
+                        </li>
+                    </ul>
+                    -->
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about" target="_blank">About</a>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+        <div id="web_object_header">
+            <div class="container-fluid">
+                @yield('web_object_header')
+            </div>
         </div>
     </div>
-</div>
+    <div id="content">
+        @yield('content')
+    </div>
 
-<div id="mainContainer" class="container-fluid">
-    @yield('content')
 </div>
 
 @section('scripts')
