@@ -41,11 +41,25 @@ class WebController extends LaravelController
             if ($object->hasCurrentVersion()) {
                 return $object->getCurrentVersion()->getBody();
             } else {
-                dd('no revision');
+                dd('no version');
             }
         }
 
         abort(404);
+    }
+
+    public function thumb($id)
+    {
+        $object = $this->repo->getById($id, [
+            'loadCurrentVersion' => true,
+        ]);
+        if( $object ) {
+            if ($object->hasCurrentVersion()) {
+                return $object->getCurrentVersion()->getBody();
+            } else {
+                dd('no version');
+            }
+        }
     }
 
     private function prepareUrl($url)

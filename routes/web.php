@@ -15,6 +15,7 @@ Route::get('/', 'WebController@home');
 Route::get('/web//{url}', 'WebController@view')->where('url', '.*?');
 Route::get('/get//{url}', 'WebController@get')->where('url', '.*?');
 Route::get('/web/{hash?}/{url}', 'WebController@view');
+Route::get('/thumb//{id}', 'WebController@thumb');
 
 Auth::routes();
 

@@ -70,6 +70,33 @@ class WebRepository
         ];
     }
 
+    public function getById($id, $options = [])
+    {
+        $options = array_merge([
+            'loadCurrentVersion' => false,
+        ], $options);
+
+        $must = [
+            ['term' => ['dataset' => 'web_objects']],
+            ['term' => ['id' => $id]],
+        ];
+
+        $res = $this->ES->search([
+            'index' => 'mojepanstwo_v1',
+            'type' => 'objects',
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
+                '_source' => ['data.*'],
+            ]
+        ]);
+
+        return $this->processGetResponse($res, $options);
+    }
+
     public function get($url, $options = [])
     {
         $url = trim($url);
@@ -106,6 +133,12 @@ class WebRepository
             ]
         ]);
 
+        return $this->processGetResponse($res, $options);
+
+    }
+
+    private function processGetResponse($res, $options)
+    {
         if(
             $res &&
             !empty($res['hits']) &&
@@ -113,7 +146,6 @@ class WebRepository
             ( $hit = $res['hits']['hits'][0] )
         ) {
 
-            // dd($hit);
             $web_object = new WebObject($hit['_source']);
 
             if(
@@ -138,8 +170,6 @@ class WebRepository
             return $web_object;
 
         }
-
         return false;
     }
-
 }
