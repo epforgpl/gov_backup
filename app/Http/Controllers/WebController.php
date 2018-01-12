@@ -22,6 +22,11 @@ class WebController extends LaravelController
         $this->request = $request;
     }
 
+    public function home()
+    {
+        return view('home');
+    }
+
     public function view($url)
     {
         $url = $this->prepareUrl($url);
