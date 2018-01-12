@@ -179,6 +179,9 @@ return [
 
         App\Providers\S3ServiceProvider::class,
         App\Providers\ESServiceProvider::class,
+
+        /* IDE helpers */
+        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class, // Laravel IDE helper // TODO run only on dev
     ],
 
     /*
