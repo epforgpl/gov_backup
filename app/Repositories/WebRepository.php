@@ -2,7 +2,10 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\MalformedUrlException;
+use App\Exceptions\ResourceNotIndexedException;
 use Elasticsearch\ClientBuilder;
+use S3;
 use App\Models\WebObject;
 use Illuminate\Support\Facades\Config;
 
@@ -13,16 +16,12 @@ class WebRepository
 
     private $schemes = ['https', 'http'];
 
-    public function __construct()
+    public function __construct(S3 $S3)
     {
-        $clientBuilder = ClientBuilder::create()->setHosts(['localhost:9200']);
+        $clientBuilder = ClientBuilder::create()->setHosts(['localhost:9201']);
         $this->ES = $clientBuilder->build();
 
-        $this->S3 = new \S3();
-
-        $this->S3->setAuth(Config::get('constants.S3.key'), Config::get('constants.S3.secret'));
-        $this->S3->setEndpoint(Config::get('constants.S3.endpoint'));
-        $this->S3->setExceptions(true);
+        $this->S3 = $S3;
     }
 
     private function getScheme($url)
@@ -45,13 +44,13 @@ class WebRepository
             $url = '//' . $url;
         }
         $data = parse_url($url);
+        if ($data === false || !($data['host'])) {
+            throw new MalformedUrlException($url);
+        }
+
         $host = $data['host'] ?? '';
         $path = $data['path'] ?? '';
         $query = $data['query'] ?? '';
-
-        if( !$host ) {
-            return false;
-        }
 
         if( $path === '/' ) {
             $path = '';
@@ -94,20 +93,22 @@ class WebRepository
             ]
         ]);
 
-        return $this->processGetResponse($res, $options);
+        $web_object = $this->processGetResponse($res, $options);
+
+        if ($web_object === null) {
+            throw new ResourceNotIndexedException("ID = $id");
+        }
+        return $web_object;
     }
 
     public function get($url, $options = [])
     {
-        $url = trim($url);
-        if( !$url ) {
-            return false;
+        $urlp = trim($url);
+        if( !$urlp ) {
+            throw new \InvalidArgumentException('URL is not set');
         }
 
-        $url = $this->parseUrl($url);
-        if( !$url ) {
-            return false;
-        }
+        $urlp = $this->parseUrl($urlp);
 
         $options = array_merge([
             'loadCurrentVersion' => false,
@@ -115,9 +116,9 @@ class WebRepository
 
         $must = [
             ['term' => ['dataset' => 'web_objects']],
-            ['term' => ['data.web_objects.host' => $url['host']]],
-            ['term' => ['data.web_objects.path' => $url['path']]],
-            ['term' => ['data.web_objects.query' => $url['query']]]
+            ['term' => ['data.web_objects.host' => $urlp['host']]],
+            ['term' => ['data.web_objects.path' => $urlp['path']]],
+            ['term' => ['data.web_objects.query' => $urlp['query']]]
         ];
 
         $res = $this->ES->search([
@@ -133,8 +134,12 @@ class WebRepository
             ]
         ]);
 
-        return $this->processGetResponse($res, $options);
+        $web_object = $this->processGetResponse($res, $options);
 
+        if ($web_object === null) {
+            throw new ResourceNotIndexedException($url);
+        }
+        return $web_object;
     }
 
     private function processGetResponse($res, $options)
@@ -159,6 +164,7 @@ class WebRepository
                     }
                     $response = $this->S3->getObject('resources', $key);
                 } catch(\S3Exception $e) {
+                    // TODO don't silence it!
                     $response = false;
                 }
 
@@ -170,6 +176,7 @@ class WebRepository
             return $web_object;
 
         }
-        return false;
+
+        return null;
     }
 }

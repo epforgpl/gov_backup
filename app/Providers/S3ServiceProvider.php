@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use S3;
 
@@ -12,6 +13,11 @@ use S3;
  */
 class S3ServiceProvider extends ServiceProvider
 {
+
+    public function __construct(Application $app) {
+        parent::__construct($app);
+    }
+
     /**
      * Bootstrap the application services.
      *
@@ -31,11 +37,12 @@ class S3ServiceProvider extends ServiceProvider
     {
         // While S3 is mostly a collection of static vars and methods, the "setEndpoint()" method is not (probably
         // an omission of the developer), so we have to create an instance..
-        $this->app->singleton('S3', function ($app) {
+        $this->app->singleton(S3::class, function ($app) {
             $s3 = new S3();
-            $s3->setAuth(getenv('FILES_LOGIN'), getenv('FILES_KEY'));
-            $s3->setEndpoint(getenv('FILES_HOST'));
+            $s3->setAuth(config('services.s3.key'), config('services.s3.secret'));
+            $s3->setEndpoint(config('services.s3.endpoint'));
             $s3->setExceptions(true);
+            // TODO where bucket is set?
             return $s3;
         });
     }

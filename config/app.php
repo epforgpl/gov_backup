@@ -177,9 +177,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        // App\Providers\S3ServiceProvider::class,
+        App\Providers\S3ServiceProvider::class,
         App\Providers\ESServiceProvider::class,
-
     ],
 
     /*
