@@ -12,10 +12,13 @@
 */
 
 Route::get('/', 'WebController@home');
-Route::get('/web//{url}', 'WebController@view')->where('url', '.*?');
-Route::get('/get//{url}', 'WebController@get')->where('url', '.*?');
+Route::get('/web//{url}', 'WebController@view')->where('url', '.*?')->name('view');
+Route::get('/get//{url}', 'WebController@get')->where('url', '.*?')->name('get');
 Route::get('/web/{hash?}/{url}', 'WebController@view');
 Route::get('/thumb//{id}', 'WebController@thumb');
+
+Route::get('/search/text/{query}', 'WebController@searchText')->name('searchText');
+Route::get('/search/url/{query}', 'WebController@searchUrl')->name('searchUrl');
 
 Auth::routes();
 

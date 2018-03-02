@@ -42,7 +42,7 @@ class S3ServiceProvider extends ServiceProvider
             $s3->setAuth(config('services.s3.key'), config('services.s3.secret'));
             $s3->setEndpoint(config('services.s3.endpoint'));
             $s3->setExceptions(true);
-            // TODO where bucket is set?
+
             return $s3;
         });
     }

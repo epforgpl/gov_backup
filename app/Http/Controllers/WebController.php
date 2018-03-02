@@ -22,9 +22,24 @@ class WebController extends LaravelController
         $this->request = $request;
     }
 
-    public function home()
+    public function home(Request $request)
     {
-        return view('home');
+        $textQuery = $request->query('search');
+        $urlQuery = $request->query('url');
+
+        $textResults = null;
+        $urlResults = null;
+        if ($textQuery) {
+            $textResults = $this->repo->searchText($textQuery);
+        }
+        else if ($urlQuery) {
+            $urlResults = $this->repo->searchUrl($urlQuery);
+        }
+
+        return view('home', [
+            'textResults' => $textResults,
+            'urlResults' => $urlResults
+        ]);
     }
 
     public function view($url)
@@ -42,11 +57,11 @@ class WebController extends LaravelController
         $object = $this->repo->get($url, [
             'loadCurrentVersion' => true,
         ]);
-        if( $object ) {
+        if ($object) {
             if ($object->hasCurrentVersion()) {
                 return $object->getCurrentVersion()->getBody();
             } else {
-                dd('no version');
+                throw new \Exception("Couldn't load data?!"); // TODO
             }
         }
 
@@ -65,6 +80,26 @@ class WebController extends LaravelController
                 dd('no version');
             }
         }
+    }
+
+    /**
+     * Search for given text
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function searchText($query, $filters = [])
+    {
+        return $this->repo->searchText($query, $filters);
+    }
+
+    /**
+     * Search for given URL
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function searchUrl($query, $filters = [])
+    {
+        return $this->repo->searchUrl($query, $filters);
     }
 
     private function prepareUrl($url)

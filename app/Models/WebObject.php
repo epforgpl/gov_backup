@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\WebObjectRevision;
 use App\Models\WebObjectVersion;
 
+// TODO update it or throw it (why we need this class?)
 class WebObject
 {
 
@@ -13,7 +14,7 @@ class WebObject
     public function __construct($data)
     {
         $web_object = $data['data']['web_objects'];
-        $revision = $data['data']['web_objects_revisions'];
+        // $revision = $data['data']['web_objects_revisions'];
         $version = $data['data']['web_objects_versions'];
 
         $this->id = (int) $web_object['id'];
@@ -31,7 +32,7 @@ class WebObject
             $this->url .= '?' . $this->query;
         }
 
-        $this->current_revision = new WebObjectRevision($revision);
+        // $this->current_revision = new WebObjectRevision($revision);
         $this->current_version = new WebObjectVersion($version);
 
     }
