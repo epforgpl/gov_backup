@@ -32,6 +32,7 @@
                                 {!! $r['highlight']['data.web_objects_versions.title'][0] or $r['data']['web_objects_versions']['title'] !!}
                             </a></h4>
                         <div><a href="{{-- TODO full original link needed --}}http://{{ $r['url'] }}">Link to original</a></div>
+                        <div>Available versions: {{ $r['versions_count'] }}</div>
                         <div>First seen: {{ $r['first_seen_ms'] }}, Last seen: {{ $r['last_seen_ms'] }}</div>
                         @if ($r['data']['web_objects_versions']['image_url'])
                             <img src="{{ $r['data']['web_objects_versions']['image_url'] }}"/>
