@@ -14,7 +14,7 @@ class UrlRevision
     public $timestamp;
     public $object_id;
     public $version_id;
-    public $rewritten_url;
+    public $object_url;
 
     /**
      * UrlRevision constructor.
@@ -24,11 +24,22 @@ class UrlRevision
      * @param $version_id
      * @param $rewritten_url
      */
-    public function __construct($timestamp, $object_id, $version_id, $rewritten_url)
+    public function __construct($timestamp, $object_id, $version_id, $object_url)
     {
         $this->timestamp = $timestamp;
         $this->object_id = $object_id;
         $this->version_id = $version_id;
-        $this->rewritten_url = $rewritten_url;
+        $this->object_url = $object_url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRewrittenUrl() {
+        $url =  route('view', [
+            'url' => $this->object_url,
+            'timestamp' => $this->timestamp->format('YmdHis')]);
+
+        return $url;
     }
 }

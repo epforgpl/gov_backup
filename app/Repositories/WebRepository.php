@@ -225,14 +225,22 @@ class WebRepository
                         'must' => $must,
                     ],
                 ],
-                '_source' => ['data.*'],
+                '_source' => ['data.web_objects_revisions.*', 'data.web_objects.url'],
             ]
         ]);
 
-        $results = [new UrlRevision('timestamp', '1', '758', '/20181010121314')];
+        $results = [new UrlRevision(\DateTime::createFromFormat("Y-m-d H:i:s", '2010-10-10 11:22:11'), 'mocked', 'TODO is version_id needed?', 'some.url')];
         if($res && isset($res['hits']['hits'])) {
             foreach ($res['hits']['hits'] as $hit) {
-                // TODO
+                $data = $hit['_source']['data']['web_objects_revisions'];
+                $dt = \DateTime::createFromFormat("Y-m-d H:i:s", $data['timestamp']);
+
+                array_push($results, new UrlRevision(
+                    $dt,
+                    $data['object_id'],
+                    'TODO is version_id needed?',
+                    $hit['_source']['data']['web_objects']['url']
+                ));
             }
         }
 
