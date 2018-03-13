@@ -6,7 +6,7 @@ namespace App\Models;
 class WebObjectVersion
 {
 
-    private $id, $body_hash, $filetime, $portal_revision_id, $media_type, $url, $body, $header, $body_processed, $keywords, $og_image_object_id, $description, $title;
+    private $id, $body_hash, $filetime, $portal_revision_id, $media_type, $url, $body, $header, $body_processed, $keywords, $image_url, $description, $title;
 
     public function __construct($data)
     {
@@ -19,7 +19,7 @@ class WebObjectVersion
         $this->title = $data['title'];
         $this->description = $data['description'];
         $this->keywords = $data['keywords'];
-        // $this->og_image_object_id = $data['og_image_object_id'];
+        $this->image_url = $data['image_url'];
         $this->body_processed = (boolean) $data['body_transformed'];
     }
 
@@ -67,12 +67,8 @@ class WebObjectVersion
         return $this->keywords;
     }
 
-    public function getOgImageObjectId() {
-        return $this->og_image_object_id;
-    }
-
     public function getThumbUrl()
     {
-        return '/thumb//' . $this->getOgImageObjectId();
+        return $this->image_url;
     }
 }
