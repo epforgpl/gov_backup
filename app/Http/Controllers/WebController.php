@@ -55,7 +55,7 @@ class WebController extends LaravelController
         ]);
     }
 
-    public function view($url)
+    public function view($timestamp, $url)
     {
         $url = $this->prepareUrl($url);
         $object = $this->repo->get($url);
@@ -64,7 +64,7 @@ class WebController extends LaravelController
         ]);
     }
 
-    public function get($url)
+    public function get($timestamp, $url)
     {
         $url = $this->prepareUrl($url);
         try {
