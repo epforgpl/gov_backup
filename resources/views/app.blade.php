@@ -62,7 +62,6 @@ In case this method wasn't used - $_page variable will be defined here with empt
 </div>
 
 @section('scripts')
-    <script src="{{ asset('/js/app.js') }}"></script>
     @stack('scripts')
 @show
 </body>
