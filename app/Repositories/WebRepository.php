@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Exceptions\MalformedUrlException;
 use App\Exceptions\ResourceNotIndexedException;
+use App\Helpers\EpfHelpers;
 use Elasticsearch\ClientBuilder;
 use S3;
 use App\Models\WebObject;
@@ -57,6 +58,13 @@ class WebRepository
         $host = $data['host'] ?? '';
         $path = $data['path'] ?? '';
         $query = $data['query'] ?? '';
+
+        // contract ./ and ../ to get canonical url
+        if( isset($path) ) {
+            $path_parts = explode('/', $path);
+            EpfHelpers::contract_path_parts($path_parts);
+            $path = implode('/', $path_parts);
+        }
 
         if( $path === '/' ) {
             $path = '';
@@ -175,7 +183,7 @@ class WebRepository
 
                 if( $response && $response->body ) {
                     $current_version->setBody($response->body);
-                }
+                } // TODO what if not?
             }
 
             return $web_object;

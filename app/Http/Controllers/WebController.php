@@ -3,24 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ResourceNotIndexedException;
+use App\Helpers\EpfHelpers;
 use App\Repositories\WebRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as LaravelController;
-
-if (!defined('array_any')) {
-    function array_any(array $array, callable $fn)
-    {
-        foreach ($array as $value) {
-            if ($fn($value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
 
 class WebController extends LaravelController
 {
@@ -72,7 +61,7 @@ class WebController extends LaravelController
                 'loadCurrentVersion' => true,
             ]);
         } catch (ResourceNotIndexedException $ex) {
-            if (array_any(['.html', '.htm', '/'], function($ends_with) use($url) {
+            if (EpfHelpers::array_any(['.html', '.htm', '/'], function($ends_with) use($url) {
                 return substr($url, -strlen($ends_with)) === $ends_with;
             })) {
                 // may be page
