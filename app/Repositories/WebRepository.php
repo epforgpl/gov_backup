@@ -8,7 +8,6 @@ use App\Helpers\EpfHelpers;
 use Elasticsearch\ClientBuilder;
 use S3;
 use App\Models\WebObject;
-use Illuminate\Support\Facades\Config;
 
 class WebRepository
 {
@@ -191,6 +190,53 @@ class WebRepository
         }
 
         return null;
+    }
+
+    /**
+     * @param $url
+     * @return UrlRevision[]
+     */
+    public function getUrlRevisions($url) {
+        $urlp = trim($url);
+        if( !$urlp ) {
+            throw new \InvalidArgumentException('URL is not set');
+        }
+
+        $urlp = $this->parseUrl($urlp);
+
+        $must = [
+            ['term' => ['dataset' => 'web_objects_revisions']],
+            ['term' => ['data.web_objects.host' => $urlp['host']]],
+            ['bool' => [
+                'should' => [
+                    ['term' => ['data.web_objects.path' => $urlp['path']]],
+                    ['term' => ['data.web_objects.path' => $urlp['path'] . '/']]
+                ]
+            ]],
+            ['term' => ['data.web_objects.query' => $urlp['query']]]
+        ];
+
+        $res = $this->ES->search([
+            'index' => 'mojepanstwo_v1',
+            'type' => 'objects',
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
+                '_source' => ['data.*'],
+            ]
+        ]);
+
+        $results = [new UrlRevision('timestamp', '1', '758', '/20181010121314')];
+        if($res && isset($res['hits']['hits'])) {
+            foreach ($res['hits']['hits'] as $hit) {
+                // TODO
+            }
+        }
+
+        return $results;
     }
 
     /**

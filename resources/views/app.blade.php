@@ -1,7 +1,3 @@
-<!--
-This view relies on $_page variable which exists when using _view method of a controller.
-In case this method wasn't used - $_page variable will be defined here with empty values.
--->
 <!doctype html>
 <html lang="{{ app()->getLocale() }}">
 <head>

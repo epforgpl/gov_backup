@@ -12,13 +12,16 @@
 */
 
 Route::get('/', 'WebController@home');
+Route::get('/web/*/{url}', 'WebController@calendar')
+    ->where('url', '.+?')
+    ->name('calendar');
 Route::get('/web/{timestamp}/{url}', 'WebController@view')
-    ->where('url', '.*?')
-    ->where('timestamp', '^(\\*|\\d{14})$')
+    ->where('url', '.+?')
+    ->where('timestamp', '^\\d{14}$')
     ->name('view');
 Route::get('/get/{timestamp}/{url}', 'WebController@get')
-    ->where('url', '.*?')
-    ->where('timestamp', '^(\\*|\\d{14})$')
+    ->where('url', '.+?')
+    ->where('timestamp', '^\\d{14}$')
     ->name('get');
 Route::get('/web/{hash?}/{url}', 'WebController@view');
 Route::get('/thumb//{id}', 'WebController@thumb');

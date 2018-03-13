@@ -53,6 +53,16 @@ class WebController extends LaravelController
         ]);
     }
 
+    public function calendar($url) {
+        $url = $this->prepareUrl($url);
+
+        $revisions = $this->repo->getUrlRevisions($url);
+
+        return view('calendar', [
+            'revisions' => $revisions
+        ]);
+    }
+
     public function get($timestamp, $url)
     {
         $url = $this->prepareUrl($url);
