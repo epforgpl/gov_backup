@@ -23,10 +23,13 @@ class WebObject
         $this->scheme = $web_object['scheme'];
         $this->host = $web_object['host'];
         $this->path = $web_object['path'];
+        if ($this->path == '') {
+            $this->path = '/';
+        }
         $this->query = $web_object['query'];
 
         $this->web_url = $this->scheme . '://' . $this->host . $this->path;
-        $this->url = '/get//' . $this->host . $this->path;
+        $this->url = '/get/20001010232323/' . $this->host . $this->path; // TODO put real timestamps in #5
         if( $this->query ) {
             $this->web_url .= '?' . $this->query;
             $this->url .= '?' . $this->query;
