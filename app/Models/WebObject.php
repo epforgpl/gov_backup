@@ -4,22 +4,22 @@ namespace App\Models;
 
 use App\Models\WebObjectRevision;
 use App\Models\WebObjectVersion;
+use App\Repositories\WebRepository;
 
 // TODO update it or throw it (why we need this class?)
 class WebObject
 {
 
-    private $id, $portal_id, $revision_id, $scheme, $host, $path, $query, $web_url, $url, $current_revision, $current_version;
+    private $id, $portal_id, $scheme, $host, $path, $query, $web_url, $url, $last_seen, $current_version;
 
     public function __construct($data)
     {
         $web_object = $data['data']['web_objects'];
-        // $revision = $data['data']['web_objects_revisions'];
-        $version = $data['data']['web_objects_versions'];
+        $this->last_seen = WebRepository::parseESDate($data['data']['web_objects_revisions']['timestamp'] ?? null);
+        $this->current_version = new WebObjectVersion($data['data']['web_objects_versions']);
 
         $this->id = (int) $web_object['id'];
         $this->portal_id = (int) $web_object['portal_id'];
-        $this->revision_id = (int) $web_object['revision_id'];
         $this->scheme = $web_object['scheme'];
         $this->host = $web_object['host'];
         $this->path = $web_object['path'];
@@ -29,25 +29,16 @@ class WebObject
         $this->query = $web_object['query'];
 
         $this->web_url = $this->scheme . '://' . $this->host . $this->path;
-        $this->url = '/get/20001010232323/' . $this->host . $this->path; // TODO put real timestamps in #5
+        $this->url = '/get/20001010232323/' . $this->host . $this->path; // TODO put real timestamps in #5 TODO do it properly with routes
         if( $this->query ) {
             $this->web_url .= '?' . $this->query;
             $this->url .= '?' . $this->query;
         }
-
-        // $this->current_revision = new WebObjectRevision($revision);
-        $this->current_version = new WebObjectVersion($version);
-
     }
 
-    public function getCurrentRevision()
+    public function getLastSeen()
     {
-        return $this->current_revision;
-    }
-
-    public function hasCurrentRevision()
-    {
-        return !empty($this->current_revision);
+        return $this->last_seen;
     }
 
     public function getCurrentVersion()

@@ -229,11 +229,11 @@ class WebRepository
             ]
         ]);
 
-        $results = [new UrlRevision(\DateTime::createFromFormat("Y-m-d H:i:s", '2010-10-10 11:22:11'), 'mocked', 'TODO is version_id needed?', 'some.url')];
+        $results = [new UrlRevision(self::parseESDate('2010-10-10 11:22:11'), 'mocked', 'TODO is version_id needed?', 'some.url')];
         if($res && isset($res['hits']['hits'])) {
             foreach ($res['hits']['hits'] as $hit) {
                 $data = $hit['_source']['data']['web_objects_revisions'];
-                $dt = \DateTime::createFromFormat("Y-m-d H:i:s", $data['timestamp']);
+                $dt = self::parseESDate($data['timestamp']);
 
                 array_push($results, new UrlRevision(
                     $dt,
@@ -245,6 +245,10 @@ class WebRepository
         }
 
         return $results;
+    }
+
+    public static function parseESDate($date_string) {
+        return \DateTime::createFromFormat("Y-m-d H:i:s", $date_string);
     }
 
     /**

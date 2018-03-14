@@ -10,7 +10,7 @@
         <div class="content">
             <h1>{{ $object->getCurrentVersion()->getTitle() }}</h1>
             <p class="url">{{ $object->getWebUrl() }}</p>
-            {{-- TODO bring it back <p class="revision">{{ $object->getCurrentRevision()->getTime() }}</p> --}}
+            <p class="revision">{{ $object->getLastSeen()->format('Y-m-d H:i:s') }}</p>
         </div>
     </div>
 @endsection
