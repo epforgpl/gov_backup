@@ -8,7 +8,9 @@
             <li>{{ $r->timestamp->format('Ymd') }}</li>
             <li>{{ $r->object_id }}</li>
             <li>{{ $r->version_id }}</li>
-            <li>{{ $r->getRewrittenUrl() }}</li>
+            <li><a href="{{ route('view', [
+            'url' => $r->object_url,
+            'timestamp' => $r->timestamp->format('YmdHis')]) }}">View</a></li>
         </ul>
     @empty
         <div>No results!</div>

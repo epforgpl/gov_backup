@@ -31,15 +31,4 @@ class UrlRevision
         $this->version_id = $version_id;
         $this->object_url = $object_url;
     }
-
-    /**
-     * @return string
-     */
-    public function getRewrittenUrl() {
-        $url =  route('view', [
-            'url' => $this->object_url,
-            'timestamp' => $this->timestamp->format('YmdHis')]);
-
-        return $url;
-    }
 }
