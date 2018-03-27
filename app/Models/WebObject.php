@@ -6,18 +6,13 @@ use App\Models\WebObjectRevision;
 use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
 
-// TODO update it or throw it (why we need this class?)
 class WebObject
 {
 
-    private $id, $portal_id, $scheme, $host, $path, $query, $web_url, $url, $last_seen, $current_version;
+    private $id, $portal_id, $scheme, $host, $path, $query, $web_url, $last_seen, $version;
 
-    public function __construct($data)
+    public function __construct($web_object)
     {
-        $web_object = $data['data']['web_objects'];
-        $this->last_seen = WebRepository::parseESDate($data['data']['web_objects_revisions']['timestamp'] ?? null);
-        $this->current_version = new WebObjectVersion($data['data']['web_objects_versions']);
-
         $this->id = (int) $web_object['id'];
         $this->portal_id = (int) $web_object['portal_id'];
         $this->scheme = $web_object['scheme'];
@@ -29,10 +24,8 @@ class WebObject
         $this->query = $web_object['query'];
 
         $this->web_url = $this->scheme . '://' . $this->host . $this->path;
-        $this->url = '/get/20001010232323/' . $this->host . $this->path; // TODO put real timestamps in #5 TODO do it properly with routes
         if( $this->query ) {
             $this->web_url .= '?' . $this->query;
-            $this->url .= '?' . $this->query;
         }
     }
 
@@ -41,24 +34,14 @@ class WebObject
         return $this->last_seen;
     }
 
-    public function getCurrentVersion()
+    public function getVersion(): WebObjectVersion
     {
-        return $this->current_version;
+        return $this->version;
     }
 
-    public function hasCurrentVersion()
-    {
-        return !empty($this->current_version);
-    }
-
-    public function getWebUrl()
+    public function getWebUrl(): string
     {
         return $this->web_url;
-    }
-
-    public function getUrl()
-    {
-        return $this->url;
     }
 
     public function getId()
@@ -66,4 +49,19 @@ class WebObject
         return $this->id;
     }
 
+    /**
+     * @param mixed $last_seen
+     */
+    public function setLastSeen($last_seen)
+    {
+        $this->last_seen = $last_seen;
+    }
+
+    /**
+     * @param mixed $version
+     */
+    public function setVersion($version)
+    {
+        $this->version = $version;
+    }
 }

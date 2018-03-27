@@ -3,18 +3,21 @@
 @section('web_object_header')
     <div class="web_object_header">
         <div class="image">
-            @if ($object->getCurrentVersion()->getThumbUrl())
+            @if ($object->getVersion()->getThumbUrl())
             <img src="{{ $object->getCurrentVersion()->getThumbUrl() }}" />
             @endif
         </div>
         <div class="content">
-            <h1>{{ $object->getCurrentVersion()->getTitle() }}</h1>
+            <h1>{{ $object->getVersion()->getTitle() }}</h1>
             <p class="url">{{ $object->getWebUrl() }}</p>
-            <p class="revision">{{ $object->getLastSeen()->format('Y-m-d H:i:s') }}</p>
+            <!-- <p class="revision">{{ $object->getVersion()->getTimestamp()->format('Y-m-d H:i:s') }}</p>
+            TODO bring it after all data are properly indexed
+            TODO we might not want to show lastSeen here, but an actual timestamp
+-->
         </div>
     </div>
 @endsection
 
 @section('content')
-<iframe id="iframe" src="{{ $object->getUrl() }}"></iframe>
+<iframe id="iframe" src="{{ $get_url }}"></iframe>
 @endsection

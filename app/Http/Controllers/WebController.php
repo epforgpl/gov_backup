@@ -44,13 +44,42 @@ class WebController extends LaravelController
         ]);
     }
 
-    public function view($timestamp, $url)
+    public static function parseTimestamp(string $timestamp): \DateTime {
+        return \DateTime::createFromFormat('YmdHis', $timestamp);
+    }
+
+    public static function stringifyTimestamp(\DateTime$timestamp): string {
+        return $timestamp->format('YmdHis');
+    }
+
+    public function view($requestedTimestampString, $url)
     {
         $url = $this->prepareUrl($url);
-        $object = $this->repo->get($url);
+
+        $requestedTimestamp = self::parseTimestamp($requestedTimestampString);
+        $object = $this->repo->get($url, $requestedTimestamp); // TODO break it in two functions (revision + version)
+
+        $actualTimestamp = $requestedTimestamp;
+        if ($requestedTimestamp != $object->getVersion()->getTimestamp()) {
+            // we have another version at different moment that was requested
+            // let's redirect for clarity
+
+            $actualTimestamp = $object->getVersion()->getTimestamp();
+            $actualTimestampString = self::stringifyTimestamp($actualTimestamp);
+            \Log::debug("Redirecting $url from requested $requestedTimestampString to $actualTimestampString");
+
+            return redirect(route('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
+        }
+
+        // TODO actual revision timestamp can be different than requested; visualize it
         return view('web/view', [
             'object' => $object,
-        ]);
+            'actualTimestamp' => $actualTimestamp,
+            'get_url' => route('get', [
+                'url' => $object->getWebUrl(),
+                'timestamp' => self::stringifyTimestamp($actualTimestamp)]) // TODO check
+            ]
+        );
     }
 
     public function calendar($url) {
@@ -67,11 +96,13 @@ class WebController extends LaravelController
     {
         $url = $this->prepareUrl($url);
         try {
-            $object = $this->repo->get($url, [
-                'loadCurrentVersion' => true,
-            ]);
+            $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp);
+
+            $object = $this->repo->get($url, $timestamp, true);
+            return $object->getVersion()->getBody();
+
         } catch (ResourceNotIndexedException $ex) {
-            if (EpfHelpers::array_any(['.html', '.htm', '/'], function($ends_with) use($url) {
+            if (EpfHelpers::array_any(['.html', '.htm', '/'], function ($ends_with) use ($url) {
                 return substr($url, -strlen($ends_with)) === $ends_with;
             })) {
                 // may be page
@@ -81,32 +112,16 @@ class WebController extends LaravelController
             } else {
                 // redirect temporary (till this resource will be scraped)
                 // TODO Shouldn't assume http, but use original scheme
-                return redirect()->away('http://' . $url, 302, ['X-GovBackup' =>    'NotScraped-RedirectingToOriginal']);
+                return redirect()->away('http://' . $url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
             }
         }
-        if ($object) {
-            if ($object->hasCurrentVersion()) {
-                return $object->getCurrentVersion()->getBody();
-            } else {
-                throw new \Exception("Couldn't load data?!"); // TODO
-            }
-        }
-
-        abort(404);
     }
 
     public function thumb($id)
     {
-        $object = $this->repo->getById($id, [
-            'loadCurrentVersion' => true,
-        ]);
-        if( $object ) {
-            if ($object->hasCurrentVersion()) {
-                return $object->getCurrentVersion()->getBody();
-            } else {
-                dd('no version');
-            }
-        }
+        $object = $this->repo->getById($id, true);
+
+        return $object->getCurrentVersion()->getBody();
     }
 
     /**

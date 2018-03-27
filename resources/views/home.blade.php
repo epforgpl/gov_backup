@@ -28,16 +28,28 @@
                 @if ($textResults !== null)
                 @forelse ($textResults as $r)
                     <div class="result-item text">
-                        <h4><a href="{{ @route('view', ['url' => $r['url']]) }}">
+                        <h4><a href="{{ @route('view', [
+                            'url' => $r['url'],
+                            # Linking to when this version was seen last time
+                            'timestamp' => $r['last_seen']->format('YmdHis')])
+                             }}">
                                 {!! $r['highlight']['data.web_objects_versions.title'][0] or $r['data']['web_objects_versions']['title'] !!}
-                            </a></h4>
+                            </a>
+                        </h4>
+
                         <div><a href="{{-- TODO full original link needed --}}http://{{ $r['url'] }}">Link to original</a></div>
-                        <div>Available versions: {{ $r['versions_count'] }}</div>
-                        <div>First seen: {{ $r['first_seen_ms'] }}, Last seen: {{ $r['last_seen_ms'] }}</div>
+
+                        <div>Available versions: <a href="#issue19{{-- query to show all the revisions of a given webpage being filtered by a search query --}}">
+                                {{ $r['versions_count'] }}</a></div>
+                        <div>This version first seen: {{ $r['first_seen']->format('Y-m-d H:i') }}</div>
+                        <div>This version last seen: {{ $r['last_seen']->format('Y-m-d H:i') }}</div>
+
                         @if ($r['data']['web_objects_versions']['image_url'])
                             <img src="{{ $r['data']['web_objects_versions']['image_url'] }}"/>
                         @endif
+
                         <div>{{ $r['data']['web_objects_versions']['description'] }}</div>
+
                         <div class="highlights">
                             @foreach($r['highlight']['text'] as $h)
                                 <div>{!! $h !!}</div>
