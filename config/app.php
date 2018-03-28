@@ -1,6 +1,6 @@
 <?php
 
-return [
+$options = [
 
     /*
     |--------------------------------------------------------------------------
@@ -176,13 +176,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
-        App\Providers\S3ServiceProvider::class,
-        App\Providers\ESServiceProvider::class,
-
-        /* IDE helpers */
-        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class, // Laravel IDE helper // TODO run only on dev
-    ],
+   ],
 
     /*
     |--------------------------------------------------------------------------
@@ -232,5 +226,11 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
 
     ],
-
 ];
+
+if ($options['debug']) {
+    /* Laravel IDE helper */
+    array_push($options['providers'], Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class);
+}
+
+return $options;

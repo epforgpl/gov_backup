@@ -14,30 +14,26 @@ return [
     |
     */
 
-    'mailgun' => [
-        'domain' => env('MAILGUN_DOMAIN'),
-        'secret' => env('MAILGUN_SECRET'),
+    'elastic' => [
+        'endpoint' => env('ELASTIC_ENDPOINT')
     ],
 
-    'ses' => [
-        'key' => env('SES_KEY'),
-        'secret' => env('SES_SECRET'),
-        'region' => 'us-east-1',
+    'storage' => [
+        'bucket' => 'govbackup-public',
+        'type' => 'openstack',
+        'options' => [
+            'username' => env('OPENSTACK_USERNAME'),
+            'password' => env('OPENSTACK_PASSWORD'),
+            'tenantId' => env('OPENSTACK_TENANT_ID'),
+            'authUrl'  => env('OPENSTACK_AUTH_URL', 'https://auth.cloud.ovh.net/v2.0'),
+            'region'   => env('OPENSTACK_REGION', 'WAW1'),
+            'keystoneAuth' => env('OPENSTACK_KEYSTONE_AUTH', 'v2'),
+        ],
+//        'type' => 's3',
+//        'options' => [
+//            'endpoint' => env('S3_ENDPOINT'),
+//            'accessKey' => env('S3_ACCESS_KEY'),
+//            'secretKey' => env('S3_SECRET_KEY'),
+//        ]
     ],
-
-    'sparkpost' => [
-        'secret' => env('SPARKPOST_SECRET'),
-    ],
-
-    'stripe' => [
-        'model' => App\User::class,
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-    ],
-
-    's3' => [
-        'endpoint' => env('S3_ENDPOINT'),
-        'key' => env('S3_KEY'),
-        'secret' => env('S3_SECRET'),
-    ]
 ];
