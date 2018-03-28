@@ -12,26 +12,29 @@ class WebObjectVersion
      * Map version of the WebObject
      *
      * @param array $data Data taken from ES
+     * @param $object_id WebObject's id to which this version belongs
      */
-    public function __construct(array $data)
+    public function __construct(array $data, $object_id)
     {
-        $this->id = (int) $data['id'];
-        $this->object_id = (int) $data['object_id'];
-        $this->portal_revision_id = (int) $data['portal_revision_id'];
-        $this->body_hash = $data['body_hash'];
-        $this->body_processed = (boolean) $data['body_transformed'];
-
-        $this->http_code = $data['http_code'];
-        $this->media_type = $data['media_type'];
         $this->title = $data['title'];
-        $this->description = $data['description'];
-        $this->keywords = $data['keywords'];
         $this->image_url = $data['image_url'];
-        $this->locale = $data['locale'];
-        $this->content_length_bytes = $data['content_length_bytes']; // with possible encoding
-        $this->size_bytes = $data['size_bytes']; // without encoding
+        $this->id = (int) $data['id'];
+        $this->body_processed = (boolean) $data['body_transformed'];
+        $this->object_id = $object_id;
 
         // other available fields
+
+//        $this->portal_revision_id = (int) $data['portal_revision_id'];
+//        $this->body_hash = $data['body_hash'];
+//        $this->description = $data['description'];
+//
+//        $this->http_code = $data['http_code'];
+//        $this->media_type = $data['media_type'];
+//        $this->keywords = $data['keywords'];
+//        $this->locale = $data['locale'];
+//        $this->content_length_bytes = $data['content_length_bytes']; // with possible encoding
+//        $this->size_bytes = $data['size_bytes']; // without encoding
+
 //            'redirection_object_id',
 //            'type',
 //            'image_object_id',
@@ -167,4 +170,5 @@ class WebObjectVersion
     {
         $this->timestamp = $timestamp;
     }
+
 }

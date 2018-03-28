@@ -10,6 +10,8 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as LaravelController;
+use Psr\Http\Message\StreamInterface;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WebController extends LaravelController
 {
@@ -57,14 +59,14 @@ class WebController extends LaravelController
         $url = $this->prepareUrl($url);
 
         $requestedTimestamp = self::parseTimestamp($requestedTimestampString);
-        $object = $this->repo->get($url, $requestedTimestamp); // TODO break it in two functions (revision + version)
+        $object = $this->repo->get($url, $requestedTimestamp);
 
         $actualTimestamp = $requestedTimestamp;
-        if ($requestedTimestamp != $object->getVersion()->getTimestamp()) {
+        if ($requestedTimestamp != $object->getTimestamp()) {
             // we have another version at different moment that was requested
             // let's redirect for clarity
 
-            $actualTimestamp = $object->getVersion()->getTimestamp();
+            $actualTimestamp = $object->getTimestamp();
             $actualTimestampString = self::stringifyTimestamp($actualTimestamp);
             \Log::debug("Redirecting $url from requested $requestedTimestampString to $actualTimestampString");
 
@@ -92,6 +94,32 @@ class WebController extends LaravelController
         ]);
     }
 
+    /**
+     * Detects streams and treat them accordingly, otherwise streams are converted to memory
+     *
+     * @param $content
+     * @return StreamedResponse
+     */
+    protected function maybeStreamResponse($content, $contentType = null) {
+        if (! $content instanceof StreamInterface) {
+            return $content;
+        }
+        /**
+         * @var $content StreamInterface
+         */
+
+        $headers = [
+            // 'Content-Type' => 'text/csv', // TODO contentType https://github.com/epforgpl/gov_backup/issues/28
+        ];
+
+        return response()->stream(function() use($content)
+        {
+            $out = fopen('php://output', 'w');
+            while (!$content->eof()) fwrite($out, $content->read(8192));
+            fclose($out);
+        }, 200, $headers);
+    }
+
     public function get($timestamp, $url)
     {
         $url = $this->prepareUrl($url);
@@ -99,7 +127,8 @@ class WebController extends LaravelController
             $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp);
 
             $object = $this->repo->get($url, $timestamp, true);
-            return $object->getVersion()->getBody();
+
+            return $this->maybeStreamResponse($object->getVersion()->getBody());
 
         } catch (ResourceNotIndexedException $ex) {
             if (EpfHelpers::array_any(['.html', '.htm', '/'], function ($ends_with) use ($url) {
@@ -121,7 +150,7 @@ class WebController extends LaravelController
     {
         $object = $this->repo->getById($id, true);
 
-        return $object->getCurrentVersion()->getBody();
+        return $object->getVersion()->getBody();
     }
 
     /**

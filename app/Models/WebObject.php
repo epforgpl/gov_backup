@@ -10,6 +10,7 @@ class WebObject
 {
 
     private $id, $portal_id, $scheme, $host, $path, $query, $web_url, $last_seen, $version;
+    private $timestamp;
 
     public function __construct($web_object)
     {
@@ -63,5 +64,20 @@ class WebObject
     public function setVersion($version)
     {
         $this->version = $version;
+    }
+
+    public function setTimestamp(\DateTime $timestamp)
+    {
+        $this->timestamp = $timestamp;
+    }
+
+    /**
+     * Returns timestamp at which we will return public content URL
+     *
+     * @return \DateTime
+     */
+    public function getTimestamp(): \DateTime
+    {
+        return $this->timestamp;
     }
 }

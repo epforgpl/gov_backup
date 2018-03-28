@@ -6,8 +6,7 @@ use App\Exceptions\MalformedUrlException;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\EpfHelpers;
 use App\Models\WebObjectVersion;
-use Elasticsearch\ClientBuilder;
-use S3;
+use App\Storage\iStorage;
 use App\Models\WebObject;
 
 class WebRepository
@@ -16,19 +15,21 @@ class WebRepository
      * @var \Elasticsearch\Client
      */
     protected $ES;
+
     /**
-     * @var S3
+     * @var iStorage
      */
-    protected $S3;
+    protected $storage;
+
+    protected $bucket;
 
     private $schemes = ['https', 'http'];
 
-    public function __construct(S3 $S3)
+    public function __construct(\Elasticsearch\Client $es, iStorage $storage)
     {
-        $clientBuilder = ClientBuilder::create()->setHosts(['localhost:9200']); // TODO move it o S3ServiceProvider
-        $this->ES = $clientBuilder->build();
-
-        $this->S3 = $S3;
+        $this->ES = $es;
+        $this->storage = $storage;
+        $this->bucket = config('services.storage.bucket');
     }
 
     private function getScheme($url)
@@ -173,7 +174,7 @@ class WebRepository
                         "boost_mode"=>"max"
                     ]
                 ],
-                '_source' => ['data.web_objects_revisions.*'],
+                '_source' => ['data.*'],
             ]
         ]);
 
@@ -181,34 +182,17 @@ class WebRepository
             throw new ResourceNotIndexedException("$url at " . $requestedTimestamp->format('c'));
         }
 
-        $revision = $res['hits']['hits'][0]['_source']['data']['web_objects_revisions'];
-        $version_id = $revision['version_id'];
-        $actualTimestamp = WebRepository::parseESDate($revision['timestamp']);
+        $hit = $res['hits']['hits'][0];
+        $revision = $hit['_source']['data']['web_objects_revisions'];
 
-        // TODO should this function be doing such complicated logic? It should rather be broken in two: looking for revision and loading a version
+        $web_object = new WebObject($hit['_source']['data']['web_objects']);
+        $version = new WebObjectVersion($hit['_source']['data']['web_objects_versions'], $web_object->getId());
+        $web_object->setVersion($version);
+        $web_object->setTimestamp(WebRepository::parseESDate($revision['timestamp']));
 
-        // get specific version
-        $res = $this->ES->search([
-            'index' => 'mojepanstwo_v1',
-            'type' => 'objects',
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['term' => ['dataset' => 'web_objects_versions']],
-                            ['term' => ['id' => $version_id]]
-                        ]
-                    ],
-                ],
-                '_source' => ['data.*'],
-            ]
-        ]);
-        if(!isset($res['hits']['hits'][0])) {
-            throw new ResourceNotIndexedException("Invalid ES state, we should get object version [ID=$version_id] for $url at " . $requestedTimestamp->format('c'));
+        if ($loadContent) {
+            $this->loadVersionContent($version);
         }
-        $this->warnInCaseOfMultipleHits($res);
-
-        $web_object = $this->convertWebObjectVersionResponse($res['hits']['hits'][0], $actualTimestamp, $loadContent);
 
         return $web_object;
     }
@@ -229,44 +213,21 @@ class WebRepository
         $web_object->setLastSeen(WebRepository::parseESDate($hit['_source']['data']['web_objects_revisions']['timestamp']));
 
         if ($loadCurrentVersionContent) {
-            loadVersionContent($web_object->getCurrentVersion());
+            $this->loadVersionContent($web_object->getVersion());
         }
-
-        return $web_object;
-    }
-
-    /**
-     * Process ES response into a nice object
-     *
-     * @param array $hit Response from Elastic Search containing WebObjectVersion
-     * @param \DateTime $timestamp
-     * @param bool $loadContent Whether we should load the content of resulting objects
-     *
-     * @return WebObject|null Return object or null if wasn't found
-     */
-    private function convertWebObjectVersionResponse(array $hit, \DateTime $timestamp, bool $loadContent)
-    {
-        $web_object = new WebObject($hit['_source']['data']['web_objects']);
-        $version = new WebObjectVersion($hit['_source']['data']['web_objects_versions']);
-        $version->setTimestamp($timestamp);
-
-        if ($loadContent) {
-            $this->loadVersionContent($version);
-        }
-        $web_object->setVersion($version);
 
         return $web_object;
     }
 
     public function loadVersionContent(WebObjectVersion &$version)
     {
-        $key = 'web/objects/' . $version->getObjectId() . '/' . $version->getId() . '/body';
+        $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
         if ($version->isBodyProcessed()) {
-            $key .= '-t';
+            $uri .= '-t';
         }
-        $response = $this->S3->getObject('resources', $key);
 
-        $version->setBody($response->body);
+        $response = $this->storage->getObject($this->bucket, $uri);
+        $version->setBody($response);
     }
 
     private function warnInCaseOfMultipleHits($response) {
@@ -319,7 +280,7 @@ class WebRepository
                 array_push($results, new UrlRevision(
                     $dt,
                     $data['object_id'],
-                    isset($data['version_id']) ? $data['version_id'] : null, // TODO is version_id needed? // TODO get rid of null
+                    isset($data['version_id']) ? $data['version_id'] : null, // TODO is version_id needed? // TODO get rid of null after reindexing
                     $hit['_source']['data']['web_objects']['url']
                 ));
             }
