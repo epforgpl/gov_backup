@@ -184,6 +184,9 @@ class WebRepository
 
         $hit = $res['hits']['hits'][0];
         $revision = $hit['_source']['data']['web_objects_revisions'];
+        if (!$revision['version_id']) {
+            throw new \Exception("Redirects are not handled. Implement https://github.com/epforgpl/OpenScrapers/issues/106");
+        }
 
         $web_object = new WebObject($hit['_source']['data']['web_objects']);
         $version = new WebObjectVersion($hit['_source']['data']['web_objects_versions'], $web_object->getId());
