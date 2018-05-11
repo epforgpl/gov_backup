@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\EpfHelpers;
+use App\Models\WebObjectRedirect;
 use App\Repositories\WebRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -60,6 +61,10 @@ class WebController extends LaravelController
 
         $requestedTimestamp = self::parseTimestamp($requestedTimestampString);
         $object = $this->repo->get($url, $requestedTimestamp);
+
+        if ($maybe_redirect = self::handleRedirect($object, $requestedTimestampString)) {
+            return $maybe_redirect;
+        }
 
         $actualTimestamp = $requestedTimestamp;
         if ($requestedTimestamp != $object->getTimestamp()) {
@@ -120,6 +125,22 @@ class WebController extends LaravelController
         }, 200, $headers);
     }
 
+    private static function handleRedirect($object, $requestedTimestampString) {
+        if ($object instanceof WebObjectRedirect) {
+            $redirection_url = $object->getRedirectLocation();
+
+            if ($object->isRedirectionArchived()) {
+                return redirect(route('view', [
+                    'url' => $redirection_url,
+                    'timestamp' => $requestedTimestampString]));
+            } else {
+                // external redirect
+                return redirect($redirection_url);
+            }
+        }
+        return null;
+    }
+
     public function get($timestamp, $url)
     {
         $url = $this->prepareUrl($url);
@@ -127,6 +148,10 @@ class WebController extends LaravelController
             $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp);
 
             $object = $this->repo->get($url, $timestamp, true);
+
+            if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
+                return $maybe_redirect;
+            }
 
             return $this->maybeStreamResponse($object->getVersion()->getBody());
 

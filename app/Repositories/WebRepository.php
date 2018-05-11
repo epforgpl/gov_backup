@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Exceptions\MalformedUrlException;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\EpfHelpers;
+use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Storage\iStorage;
 use App\Models\WebObject;
@@ -184,10 +185,18 @@ class WebRepository
 
         $hit = $res['hits']['hits'][0];
         $revision = $hit['_source']['data']['web_objects_revisions'];
-        if (!$revision['version_id']) {
-            throw new \Exception("Redirects are not handled. Implement https://github.com/epforgpl/OpenScrapers/issues/106");
-        }
 
+
+        if ($revision['redirection_location']) {
+            // this was a redirection
+            $web_object = new WebObjectRedirect($hit['_source']['data']['web_objects']);
+            $web_object->setTimestamp(WebRepository::parseESDate($revision['timestamp']));
+
+            $web_object->setRedirectLocation($revision['redirection_location']);
+            $web_object->setRedirectionArchived((bool) $revision['redirection_object_id']);
+
+            return $web_object;
+        }
         $web_object = new WebObject($hit['_source']['data']['web_objects']);
         $version = new WebObjectVersion($hit['_source']['data']['web_objects_versions'], $web_object->getId());
         $web_object->setVersion($version);
@@ -226,7 +235,7 @@ class WebRepository
     {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
         if ($version->isBodyProcessed()) {
-            $uri .= '-t';
+            $uri .= '_transformed';
         }
 
         $response = $this->storage->getObject($this->bucket, $uri);
