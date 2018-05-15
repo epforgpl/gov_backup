@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\EpfHelpers;
 use App\Models\WebObjectRedirect;
+use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -102,20 +103,23 @@ class WebController extends LaravelController
     /**
      * Detects streams and treat them accordingly, otherwise streams are converted to memory
      *
-     * @param $content
+     * @param $version
      * @return StreamedResponse
      */
-    protected function maybeStreamResponse($content, $contentType = null) {
+    protected function maybeStreamResponse(WebObjectVersion $version, $contentType = null) {
+        $content = $version->getBody();
+
+        $headers = [];
+        if ($version->getMediaType()) {
+            $headers['Content-Type'] = $version->getMediaType();
+        }
+
         if (! $content instanceof StreamInterface) {
-            return $content;
+            return response($content)->withHeaders($headers);
         }
         /**
          * @var $content StreamInterface
          */
-
-        $headers = [
-            // 'Content-Type' => 'text/csv', // TODO contentType https://github.com/epforgpl/gov_backup/issues/28
-        ];
 
         return response()->stream(function() use($content)
         {
@@ -153,7 +157,7 @@ class WebController extends LaravelController
                 return $maybe_redirect;
             }
 
-            return $this->maybeStreamResponse($object->getVersion()->getBody());
+            return $this->maybeStreamResponse($object->getVersion());
 
         } catch (ResourceNotIndexedException $ex) {
             if (EpfHelpers::array_any(['.html', '.htm', '/'], function ($ends_with) use ($url) {

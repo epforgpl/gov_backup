@@ -21,6 +21,7 @@ class WebObjectVersion
         $this->id = (int) $data['id'];
         $this->body_processed = (boolean) $data['body_transformed'];
         $this->object_id = $object_id;
+        $this->media_type = $data['media_type'];
 
         // other available fields
 
