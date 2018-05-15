@@ -292,7 +292,8 @@ class WebRepository
                 array_push($results, new UrlRevision(
                     $dt,
                     $data['object_id'],
-                    isset($data['version_id']) ? $data['version_id'] : null, // TODO is version_id needed? // TODO get rid of null after reindexing
+                    // version_id == null will be returned if this revision is a redirection
+                    isset($data['version_id']) ? $data['version_id'] : null,
                     $hit['_source']['data']['web_objects']['url']
                 ));
             }
