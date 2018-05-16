@@ -175,6 +175,11 @@ class WebController extends LaravelController
         }
     }
 
+    public function diff($fromTimestamp, $toTimestamp, $type, $url)
+    {
+        return response($url);
+    }
+
     public function thumb($id)
     {
         $object = $this->repo->getById($id, true);
