@@ -86,7 +86,7 @@ class WebRepository
     }
 
     // TODO at which timestamp this should be loaded?
-    public function getById($id, $loadContent = false)
+    public function getById(int $id, $loadContent = false)
     {
         $res = $this->ES->search([
             'index' => 'mojepanstwo_v1',
@@ -317,7 +317,9 @@ class WebRepository
      *
      * @return \Illuminate\Http\Response
      */
-    public function searchUrl($query, $filters = []) {
+    public function searchUrl(string $query, $filters = []) {
+        $query = json_encode($query);
+
         $request = <<<JSON
 GET mojepanstwo_v1/objects/1/_explain
 {
@@ -375,8 +377,9 @@ JSON;
      *
      * @return \Illuminate\Http\Response
      */
-    public function searchText($query, $filters = []) {
-        // TODO escape $query;
+    public function searchText(string $query, $filters = []) {
+        // escape $query;
+        $query =  json_encode( $query );
 
         $request = <<<JSON
 {
@@ -390,13 +393,13 @@ JSON;
       },
       "must": {
         "match": {
-          "text": "$query"
+          "text": $query
         }
       },
       "should": [
         {
           "multi_match": {
-            "query": "$query",
+            "query": $query,
             "fields": [
               "data.web_objects_versions.title",
               "data.web_objects_versions.description"
