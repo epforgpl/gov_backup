@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b3088e542cfde4c3fb0b47e5bd649c3",
+    "content-hash": "77815a4c1cc7e0989ebc50bb46b93b90",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -375,6 +375,52 @@
                 "trusted proxy"
             ],
             "time": "2017-06-15T17:19:42+00:00"
+        },
+        {
+            "name": "gorhill/php-fine-diff",
+            "version": "dev-multibyte",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/BillyNate/PHP-FineDiff.git",
+                "reference": "0a0fc20893303d4d07cfffe77b3a60592b4de0af"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/BillyNate/PHP-FineDiff/zipball/0a0fc20893303d4d07cfffe77b3a60592b4de0af",
+                "reference": "0a0fc20893303d4d07cfffe77b3a60592b4de0af",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GorHill\\FineDiff\\": "GorHill/FineDiff"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Hill",
+                    "email": "r.michael@queo-group.com",
+                    "homepage": "http://www.queoflow.com/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Falk Gräser",
+                    "email": "f.graeser@queo-group.com",
+                    "homepage": "http://www.queoflow.com/",
+                    "role": "The-Clean-Up-Guy"
+                }
+            ],
+            "homepage": "http://www.raymondhill.net/finediff/",
+            "keywords": [
+                "FineDiff"
+            ],
+            "support": {
+                "source": "https://github.com/BillyNate/PHP-FineDiff/tree/multibyte"
+            },
+            "time": "2017-01-18T16:34:56+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -4779,7 +4825,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "gorhill/php-fine-diff": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

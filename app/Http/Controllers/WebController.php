@@ -7,6 +7,8 @@ use App\Helpers\EpfHelpers;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
+use GorHill\FineDiff\FineDiff;
+use GorHill\FineDiff\FineDiffHTML;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -175,9 +177,37 @@ class WebController extends LaravelController
         }
     }
 
-    public function diff($fromTimestamp, $toTimestamp, $type, $url)
+    public function diff($fromTimestampString, $toTimestampString, $type, $url)
     {
-        return response($url);
+        $url = $this->prepareUrl($url);
+        $fromTimestamp = \DateTime::createFromFormat('YmdHis', $fromTimestampString);
+        $toTimestamp = \DateTime::createFromFormat('YmdHis', $toTimestampString);
+
+        $fromObject = $this->repo->get($url, $fromTimestamp, true);
+        $toObject = $this->repo->get($url, $toTimestamp, true);
+
+        if ($fromObject instanceof WebObjectRedirect or $toObject instanceof WebObjectRedirect) {
+            throw new Exception("Diff can't be computed on redirects");
+        }
+
+        // TODO get unchanged body
+        $from = $fromObject->getVersion()->getBody();
+        $to = $toObject->getVersion()->getBody();
+
+        /**
+         * More info: https://github.com/BillyNate/PHP-FineDiff
+        If you wish a different granularity from the default one, you can use
+        one of the provided stock granularity stacks:
+
+        FineDiff::$paragraphGranularity
+        FineDiff::$sentenceGranularity
+        FineDiff::$wordGranularity
+        FineDiff::$characterGranularity (default)
+         */
+        $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$characterGranularity);
+        $h3 = FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
+
+        return response($h3);
     }
 
     public function thumb($id)
