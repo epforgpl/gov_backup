@@ -194,6 +194,27 @@ class WebController extends LaravelController
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();
 
+        if ($formatHtml = true) {
+            // TODO try out https://github.com/gajus/dindent that just indent only, without sanitizing
+
+            $tidy_config = array(
+                'output-html' => true,
+                'markup' => true,
+                'indent' => true
+            );
+
+            // TODO get right encoding from ES data
+            // TODO maybe save notifications from $tidy->errorBuffer?
+            $tidy = new \tidy();
+            $tidy->parseString($from, $tidy_config, 'UTF8');
+            $tidy->cleanRepair();
+            $from = \tidy_get_output($tidy);
+
+            $tidy->parseString($to, $tidy_config, 'UTF8');
+            $tidy->cleanRepair();
+            $to = \tidy_get_output($tidy);
+        }
+
         /**
          * More info: https://github.com/BillyNate/PHP-FineDiff
         If you wish a different granularity from the default one, you can use
@@ -207,7 +228,9 @@ class WebController extends LaravelController
         $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$characterGranularity);
         $h3 = FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
 
-        return response($h3);
+        return view('diff', [
+                'formatted_html' => $h3
+        ]);
     }
 
     public function thumb($id)

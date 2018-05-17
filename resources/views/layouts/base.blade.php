@@ -12,6 +12,9 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    @section('styles')
+        @stack('styles')
+    @show
 </head>
 <body>
     @yield('body')
