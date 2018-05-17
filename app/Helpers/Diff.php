@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use GorHill\FineDiff\FineDiff;
+use GorHill\FineDiff\FineDiffHTML;
 
 abstract class Diff
 {
@@ -15,5 +17,20 @@ abstract class Diff
         $types = explode('/', $mediaType);
 
         return count($types) == 2 && $types[0] == 'text';
+    }
+
+    public static function renderChangesToHtml($from, $to) {
+        /**
+         * More info: https://github.com/BillyNate/PHP-FineDiff
+        If you wish a different granularity from the default one, you can use
+        one of the provided stock granularity stacks:
+
+        FineDiff::$paragraphGranularity
+        FineDiff::$sentenceGranularity
+        FineDiff::$wordGranularity
+        FineDiff::$characterGranularity (default)
+         */
+        $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$characterGranularity);
+        return FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
     }
 }

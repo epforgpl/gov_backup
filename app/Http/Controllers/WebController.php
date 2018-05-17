@@ -8,8 +8,6 @@ use App\Helpers\EpfHelpers;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
-use GorHill\FineDiff\FineDiff;
-use GorHill\FineDiff\FineDiffHTML;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -217,22 +215,10 @@ class WebController extends LaravelController
             $to = $indenter->indent($to);
         }
 
-        /**
-         * More info: https://github.com/BillyNate/PHP-FineDiff
-        If you wish a different granularity from the default one, you can use
-        one of the provided stock granularity stacks:
-
-        FineDiff::$paragraphGranularity
-        FineDiff::$sentenceGranularity
-        FineDiff::$wordGranularity
-        FineDiff::$characterGranularity (default)
-         */
-        $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$characterGranularity);
-        $h3 = FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
+        $html = Diff::renderChangesToHtml($from, $to);
 
         return view('diff', [
-                'formatted_html' => $h3,
-            'identical_after_format' => $to == $from
+                'formatted_html' => $html
         ]);
     }
 
