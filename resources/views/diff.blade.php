@@ -5,5 +5,6 @@
 @endsection
 
 @section('body')
+    {{ $identical_after_format }}
     <pre>{!! $formatted_html !!}</pre>
 @endsection

@@ -127,11 +127,11 @@ class WebRepository
      *
      * @param string $url World-facing url that user is interested in
      * @param \DateTime $requestedTimestamp Timestamp at which resource should be returned. Actual returned revision may differ
-     * @param bool $loadContent Return content as well, defaults to false
+     * @param $loadContent Return content as well, defaults to false
      * @return WebObject
      * @throws ResourceNotIndexedException
      */
-    public function get(string $url, \DateTime $requestedTimestamp, bool $loadContent = false): WebObject
+    public function get(string $url, \DateTime $requestedTimestamp, $loadContent = false): WebObject
     {
         $urlp = trim($url);
         if( !$urlp ) {
@@ -203,7 +203,7 @@ class WebRepository
         $web_object->setTimestamp(WebRepository::parseESDate($revision['timestamp']));
 
         if ($loadContent) {
-            $this->loadVersionContent($version);
+            $this->loadVersionContent($version, $loadContent !== 'non-transformed');
         }
 
         return $web_object;
@@ -225,16 +225,16 @@ class WebRepository
         $web_object->setLastSeen(WebRepository::parseESDate($hit['_source']['data']['web_objects_revisions']['timestamp']));
 
         if ($loadCurrentVersionContent) {
-            $this->loadVersionContent($web_object->getVersion());
+            $this->loadVersionContent($web_object->getVersion(), true);
         }
 
         return $web_object;
     }
 
-    public function loadVersionContent(WebObjectVersion &$version)
+    public function loadVersionContent(WebObjectVersion &$version, bool $transformed = true)
     {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
-        if ($version->isBodyProcessed()) {
+        if ($version->isBodyProcessed() && $transformed) {
             $uri .= '_transformed';
         }
 

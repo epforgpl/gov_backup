@@ -78,6 +78,7 @@ class WebController extends LaravelController
             $actualTimestampString = self::stringifyTimestamp($actualTimestamp);
             \Log::debug("Redirecting $url from requested $requestedTimestampString to $actualTimestampString");
 
+            // TODO we should inform user about changing the requested timestamp to the closest one we have
             return redirect(route('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
         }
 
@@ -183,24 +184,35 @@ class WebController extends LaravelController
         $fromTimestamp = \DateTime::createFromFormat('YmdHis', $fromTimestampString);
         $toTimestamp = \DateTime::createFromFormat('YmdHis', $toTimestampString);
 
-        $fromObject = $this->repo->get($url, $fromTimestamp, true);
-        $toObject = $this->repo->get($url, $toTimestamp, true);
+        $fromObject = $this->repo->get($url, $fromTimestamp, 'non-transformed');
+        $toObject = $this->repo->get($url, $toTimestamp, 'non-transformed');
+        // TODO actual timestamps may be different, do we throw an Exception or inform user and redirect?
 
         if ($fromObject instanceof WebObjectRedirect or $toObject instanceof WebObjectRedirect) {
-            throw new Exception("Diff can't be computed on redirects");
+            throw new \Exception("Diff can't be computed on redirects");
+        }
+
+        if ($fromObject->getVersion()->getId() == $toObject->getVersion()->getId()) {
+            throw new \Exception("Versions are identical");
         }
 
         // TODO get unchanged body
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();
 
-        if ($formatHtml = true) {
+        if ($type == 'html-formatted') {
             // TODO try out https://github.com/gajus/dindent that just indent only, without sanitizing
 
             $tidy_config = array(
                 'output-html' => true,
                 'markup' => true,
-                'indent' => true
+                'indent' => true,
+
+                'drop-empty-elements' => false,
+                'drop-empty-paras' => false,
+                'merge-divs' => false,
+                'merge-spans' => false
+                // TODO do we want to show non-important changes?
             );
 
             // TODO get right encoding from ES data
@@ -210,6 +222,7 @@ class WebController extends LaravelController
             $tidy->cleanRepair();
             $from = \tidy_get_output($tidy);
 
+            $tidy = new \tidy();
             $tidy->parseString($to, $tidy_config, 'UTF8');
             $tidy->cleanRepair();
             $to = \tidy_get_output($tidy);
@@ -229,7 +242,8 @@ class WebController extends LaravelController
         $h3 = FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
 
         return view('diff', [
-                'formatted_html' => $h3
+                'formatted_html' => $h3,
+            'identical_after_format' => $to == $from
         ]);
     }
 
