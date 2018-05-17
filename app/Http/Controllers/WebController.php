@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ResourceNotIndexedException;
+use App\Helpers\Diff;
 use App\Helpers\EpfHelpers;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
@@ -196,11 +197,21 @@ class WebController extends LaravelController
             throw new \Exception("Versions are identical");
         }
 
-        // TODO get unchanged body
+        if (!Diff::diffable($mediaType = $fromObject->getVersion()->getMediaType())) {
+            throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
+        }
+        if (!Diff::diffable($toObject->getVersion()->getMediaType())) {
+            throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
+        }
+
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();
+        
+        if (sha1($from) === sha1($to)) {
+            throw new \Exception("Versions are identical");
+        }
 
-        if ($type == 'html-formatted') {
+        if ($type == 'html-formatted' && $mediaType == 'text/html') {
             // TODO try out https://github.com/gajus/dindent that just indent only, without sanitizing
 
             $tidy_config = array(
