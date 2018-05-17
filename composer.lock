@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b3088e542cfde4c3fb0b47e5bd649c3",
+    "content-hash": "ff00981e81956893f996bad00367fde7",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -375,6 +375,97 @@
                 "trusted proxy"
             ],
             "time": "2017-06-15T17:19:42+00:00"
+        },
+        {
+            "name": "gajus/dindent",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/gajus/dindent.git",
+                "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/gajus/dindent/zipball/d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+                "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Gajus\\Dindent\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Gajus Kuizinas",
+                    "email": "gk@anuary.com"
+                }
+            ],
+            "description": "HTML indentation library for development and testing.",
+            "homepage": "https://github.com/gajus/dindent",
+            "keywords": [
+                "format",
+                "html",
+                "indent"
+            ],
+            "time": "2014-10-08T10:03:04+00:00"
+        },
+        {
+            "name": "gorhill/php-fine-diff",
+            "version": "dev-multibyte",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/BillyNate/PHP-FineDiff.git",
+                "reference": "0a0fc20893303d4d07cfffe77b3a60592b4de0af"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/BillyNate/PHP-FineDiff/zipball/0a0fc20893303d4d07cfffe77b3a60592b4de0af",
+                "reference": "0a0fc20893303d4d07cfffe77b3a60592b4de0af",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GorHill\\FineDiff\\": "GorHill/FineDiff"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Hill",
+                    "email": "r.michael@queo-group.com",
+                    "homepage": "http://www.queoflow.com/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Falk Gräser",
+                    "email": "f.graeser@queo-group.com",
+                    "homepage": "http://www.queoflow.com/",
+                    "role": "The-Clean-Up-Guy"
+                }
+            ],
+            "homepage": "http://www.raymondhill.net/finediff/",
+            "keywords": [
+                "FineDiff"
+            ],
+            "support": {
+                "source": "https://github.com/BillyNate/PHP-FineDiff/tree/multibyte"
+            },
+            "time": "2017-01-18T16:34:56+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -4779,7 +4870,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "gorhill/php-fine-diff": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

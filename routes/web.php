@@ -23,11 +23,17 @@ Route::get('/get/{timestamp}/{url}', 'WebController@get')
     ->where('url', '.+?')
     ->where('timestamp', '^\\d{14}$')
     ->name('get');
-Route::get('/web/{hash?}/{url}', 'WebController@view');
 Route::get('/thumb//{id}', 'WebController@thumb');
 
 Route::get('/search/text/{query}', 'WebController@searchText')->name('searchText');
 Route::get('/search/url/{query}', 'WebController@searchUrl')->name('searchUrl');
+
+Route::get('/diff/{timestamp_from}..{timestamp_to}/{type}/{url}', 'WebController@diff')
+    ->where('url', '.+?')
+    ->where('timestamp_from', '^\\d{14}$')
+    ->where('timestamp_to', '^\\d{14}$')
+    ->where('type', 'html|html\\-formatted')
+    ->name('diff');
 
 Auth::routes();
 

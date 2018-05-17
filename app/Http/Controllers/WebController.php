@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ResourceNotIndexedException;
+use App\Helpers\Diff;
 use App\Helpers\EpfHelpers;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
@@ -76,6 +77,7 @@ class WebController extends LaravelController
             $actualTimestampString = self::stringifyTimestamp($actualTimestamp);
             \Log::debug("Redirecting $url from requested $requestedTimestampString to $actualTimestampString");
 
+            // TODO we should inform user about changing the requested timestamp to the closest one we have
             return redirect(route('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
         }
 
@@ -173,6 +175,59 @@ class WebController extends LaravelController
                 return redirect()->away('http://' . $url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
             }
         }
+    }
+
+    public function diff($fromTimestampString, $toTimestampString, $type, $url)
+    {
+        $url = $this->prepareUrl($url);
+        $fromTimestamp = \DateTime::createFromFormat('YmdHis', $fromTimestampString);
+        $toTimestamp = \DateTime::createFromFormat('YmdHis', $toTimestampString);
+
+        if ($toTimestamp < $fromTimestamp) {
+            // TODO are you user sure you want to diff it other way around?
+            // TODO shouldn't we redirect to "right" order or at least switch timestamps?
+        }
+
+        $fromObject = $this->repo->get($url, $fromTimestamp, 'non-transformed');
+        $toObject = $this->repo->get($url, $toTimestamp, 'non-transformed');
+
+        // TODO actual timestamps may be different, do we throw an Exception or inform user and redirect?
+
+        if ($fromObject instanceof WebObjectRedirect or $toObject instanceof WebObjectRedirect) {
+            throw new \Exception("Diff can't be computed on redirects");
+        }
+
+        if ($fromObject->getVersion()->getId() == $toObject->getVersion()->getId()) {
+            throw new \Exception("Versions are identical");
+        }
+
+        if (!Diff::diffable($mediaType = $fromObject->getVersion()->getMediaType())) {
+            throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
+        }
+        if (!Diff::diffable($toObject->getVersion()->getMediaType())) {
+            throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
+        }
+
+        $from = $fromObject->getVersion()->getBody();
+        $to = $toObject->getVersion()->getBody();
+
+        if (sha1($from) === sha1($to)) {
+            throw new \Exception("Versions are identical");
+        }
+
+        if ($type == 'html-formatted' && $mediaType == 'text/html') {
+            $indenter = new \Gajus\Dindent\Indenter();
+            $from = $indenter->indent($from);
+            $to = $indenter->indent($to);
+        }
+
+        $html = Diff::renderChangesToHtml($from, $to);
+
+        return view('diff', [
+            'formattedHtml' => $html,
+            'fromObject' => $fromObject,
+            'toObject' => $toObject
+        ]);
     }
 
     public function thumb($id)
