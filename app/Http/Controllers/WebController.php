@@ -183,8 +183,14 @@ class WebController extends LaravelController
         $fromTimestamp = \DateTime::createFromFormat('YmdHis', $fromTimestampString);
         $toTimestamp = \DateTime::createFromFormat('YmdHis', $toTimestampString);
 
+        if ($toTimestamp < $fromTimestamp) {
+            // TODO are you user sure you want to diff it other way around?
+            // TODO shouldn't we redirect to "right" order or at least switch timestamps?
+        }
+
         $fromObject = $this->repo->get($url, $fromTimestamp, 'non-transformed');
         $toObject = $this->repo->get($url, $toTimestamp, 'non-transformed');
+
         // TODO actual timestamps may be different, do we throw an Exception or inform user and redirect?
 
         if ($fromObject instanceof WebObjectRedirect or $toObject instanceof WebObjectRedirect) {
@@ -218,7 +224,9 @@ class WebController extends LaravelController
         $html = Diff::renderChangesToHtml($from, $to);
 
         return view('diff', [
-                'formatted_html' => $html
+            'formattedHtml' => $html,
+            'fromObject' => $fromObject,
+            'toObject' => $toObject
         ]);
     }
 
