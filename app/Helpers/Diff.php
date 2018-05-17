@@ -14,6 +14,11 @@ abstract class Diff
      * @return bool
      */
     public static function diffable(string $mediaType) {
+        // some exceptions beyond text/abc media type
+        if (in_array($mediaType, ['application/javascript'])) {
+            return true;
+        }
+
         $types = explode('/', $mediaType);
 
         return count($types) == 2 && $types[0] == 'text';
