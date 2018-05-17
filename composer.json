@@ -8,6 +8,7 @@
         "php": ">=7.0.0",
         "elasticsearch/elasticsearch": "^6.0",
         "fideloper/proxy": "~3.3",
+        "gajus/dindent": "^2.0",
         "gorhill/php-fine-diff": "dev-multibyte",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",

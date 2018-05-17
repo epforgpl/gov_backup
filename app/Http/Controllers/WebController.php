@@ -206,37 +206,15 @@ class WebController extends LaravelController
 
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();
-        
+
         if (sha1($from) === sha1($to)) {
             throw new \Exception("Versions are identical");
         }
 
         if ($type == 'html-formatted' && $mediaType == 'text/html') {
-            // TODO try out https://github.com/gajus/dindent that just indent only, without sanitizing
-
-            $tidy_config = array(
-                'output-html' => true,
-                'markup' => true,
-                'indent' => true,
-
-                'drop-empty-elements' => false,
-                'drop-empty-paras' => false,
-                'merge-divs' => false,
-                'merge-spans' => false
-                // TODO do we want to show non-important changes?
-            );
-
-            // TODO get right encoding from ES data
-            // TODO maybe save notifications from $tidy->errorBuffer?
-            $tidy = new \tidy();
-            $tidy->parseString($from, $tidy_config, 'UTF8');
-            $tidy->cleanRepair();
-            $from = \tidy_get_output($tidy);
-
-            $tidy = new \tidy();
-            $tidy->parseString($to, $tidy_config, 'UTF8');
-            $tidy->cleanRepair();
-            $to = \tidy_get_output($tidy);
+            $indenter = new \Gajus\Dindent\Indenter();
+            $from = $indenter->indent($from);
+            $to = $indenter->indent($to);
         }
 
         /**
