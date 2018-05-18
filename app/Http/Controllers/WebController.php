@@ -188,8 +188,13 @@ class WebController extends LaravelController
             // TODO shouldn't we redirect to "right" order or at least switch timestamps?
         }
 
-        $fromObject = $this->repo->get($url, $fromTimestamp, 'non-transformed');
-        $toObject = $this->repo->get($url, $toTimestamp, 'non-transformed');
+        $contentView = 'non-transformed';
+        if ($type == 'text') {
+            $contentView = 'text';
+        }
+
+        $fromObject = $this->repo->get($url, $fromTimestamp, $contentView);
+        $toObject = $this->repo->get($url, $toTimestamp, $contentView);
 
         // TODO actual timestamps may be different, do we throw an Exception or inform user and redirect?
 
@@ -225,6 +230,7 @@ class WebController extends LaravelController
 
         return view('diff', [
             'formattedHtml' => $html,
+            'contentView' => $contentView,
             'fromObject' => $fromObject,
             'toObject' => $toObject
         ]);

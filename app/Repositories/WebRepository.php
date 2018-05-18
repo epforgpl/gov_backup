@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\ContentViewNotFound;
 use App\Exceptions\MalformedUrlException;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\EpfHelpers;
@@ -127,11 +128,11 @@ class WebRepository
      *
      * @param string $url World-facing url that user is interested in
      * @param \DateTime $requestedTimestamp Timestamp at which resource should be returned. Actual returned revision may differ
-     * @param $loadContent Return content as well, defaults to false
+     * @param $contentView Which type of content to load, defaults to false
      * @return WebObject
      * @throws ResourceNotIndexedException
      */
-    public function get(string $url, \DateTime $requestedTimestamp, $loadContent = false): WebObject
+    public function get(string $url, \DateTime $requestedTimestamp, $contentView = false): WebObject
     {
         $urlp = trim($url);
         if( !$urlp ) {
@@ -202,8 +203,8 @@ class WebRepository
         $web_object->setVersion($version);
         $web_object->setTimestamp(WebRepository::parseESDate($revision['timestamp']));
 
-        if ($loadContent) {
-            $this->loadVersionContent($version, $loadContent !== 'non-transformed');
+        if ($contentView) {
+            $this->loadVersionContent($version, $contentView);
         }
 
         return $web_object;
@@ -231,11 +232,22 @@ class WebRepository
         return $web_object;
     }
 
-    public function loadVersionContent(WebObjectVersion &$version, bool $transformed = true)
+    public function loadVersionContent(WebObjectVersion &$version, $contentView = true)
     {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
-        if ($version->isBodyProcessed() && $transformed) {
+
+        if ($contentView === true) {
+            if (!$version->isBodyProcessed()) {
+                throw new ContentViewNotFound('transformed', $version->getId());
+            }
             $uri .= '_transformed';
+        }
+        if ($contentView === 'text') {
+            if (!$version->hasBodyText()) {
+                throw new ContentViewNotFound($contentView, $version->getId());
+            } else {
+                $uri .= '-text';
+            }
         }
 
         $response = $this->storage->getObject($this->bucket, $uri);

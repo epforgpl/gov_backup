@@ -5,7 +5,7 @@ namespace App\Models;
 class WebObjectVersion
 {
 
-    private $id, $body_hash, $portal_revision_id, $media_type, $body, $header, $body_processed, $keywords,
+    private $id, $body_hash, $portal_revision_id, $media_type, $body, $header, $body_processed, $has_body_text, $keywords,
         $image_url, $description, $title, $http_code, $locale, $content_length_bytes, $size_bytes, $timestamp, $object_id;
 
     /**
@@ -20,6 +20,7 @@ class WebObjectVersion
         $this->image_url = $data['image_url'];
         $this->id = (int) $data['id'];
         $this->body_processed = (boolean) $data['body_transformed'];
+        $this->has_body_text = isset($data['has_body_text']) ? $data['has_body_text'] : false;
         $this->object_id = $object_id;
         $this->media_type = $data['media_type'];
 
@@ -78,6 +79,13 @@ class WebObjectVersion
     public function isBodyProcessed()
     {
         return $this->body_processed;
+    }
+
+    public function hasBodyText($value = null) {
+        if ($value !== null) {
+            $this->has_body_text = $value;
+        }
+        return $this->has_body_text;
     }
 
     public function getTitle()

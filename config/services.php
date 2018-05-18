@@ -20,20 +20,20 @@ return [
 
     'storage' => [
         'bucket' => 'govbackup-public',
-        'type' => 'openstack',
-        'options' => [
-            'username' => env('OPENSTACK_USERNAME'),
-            'password' => env('OPENSTACK_PASSWORD'),
-            'tenantId' => env('OPENSTACK_TENANT_ID'),
-            'authUrl'  => env('OPENSTACK_AUTH_URL', 'https://auth.cloud.ovh.net/v2.0'),
-            'region'   => env('OPENSTACK_REGION', 'WAW1'),
-            'keystoneAuth' => env('OPENSTACK_KEYSTONE_AUTH', 'v2'),
-        ],
-//        'type' => 's3',
+//        'type' => 'openstack',
 //        'options' => [
-//            'endpoint' => env('S3_ENDPOINT'),
-//            'accessKey' => env('S3_ACCESS_KEY'),
-//            'secretKey' => env('S3_SECRET_KEY'),
-//        ]
+//            'username' => env('OPENSTACK_USERNAME'),
+//            'password' => env('OPENSTACK_PASSWORD'),
+//            'tenantId' => env('OPENSTACK_TENANT_ID'),
+//            'authUrl'  => env('OPENSTACK_AUTH_URL', 'https://auth.cloud.ovh.net/v2.0'),
+//            'region'   => env('OPENSTACK_REGION', 'WAW1'),
+//            'keystoneAuth' => env('OPENSTACK_KEYSTONE_AUTH', 'v2'),
+//        ],
+        'type' => 's3',
+        'options' => [
+            'endpoint' => env('S3_ENDPOINT'),
+            'accessKey' => env('S3_ACCESS_KEY'),
+            'secretKey' => env('S3_SECRET_KEY'),
+        ]
     ],
 ];

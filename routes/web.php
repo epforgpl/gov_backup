@@ -32,7 +32,7 @@ Route::get('/diff/{timestamp_from}..{timestamp_to}/{type}/{url}', 'WebController
     ->where('url', '.+?')
     ->where('timestamp_from', '^\\d{14}$')
     ->where('timestamp_to', '^\\d{14}$')
-    ->where('type', 'html|html\\-formatted')
+    ->where('type', 'html|html\\-formatted|text')
     ->name('diff');
 
 Auth::routes();
