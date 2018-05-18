@@ -226,11 +226,11 @@ class WebController extends LaravelController
             $to = $indenter->indent($to);
         }
 
-        $html = Diff::renderChangesToHtml($from, $to);
+        $diff = Diff::renderChangesToHtml($from, $to);
 
         return view('diff', [
-            'formattedHtml' => $html,
-            'contentView' => $contentView,
+            'diff' => $diff,
+            'diffType' => $type,
             'fromObject' => $fromObject,
             'toObject' => $toObject
         ]);

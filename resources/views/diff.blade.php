@@ -9,11 +9,19 @@
         You are comparing version from {{ $fromObject->getTimestamp()->format('Y-m-d H:i:s') }} (last time seen at [I might get it if needed] }})
         to version {{ $toObject->getTimestamp()->format('Y-m-d H:i:s') }} (first time seen at [I might get it if needed])
     </div>
-    @if ($contentView == 'text')
+    @if ($diffType == 'text')
         <p>
-            {!! $formattedHtml !!}
+            {!! $diff !!}
         </p>
+
+    @elseif ($diffType == 'html' || $diffType == 'html-formatted')
+        <pre>{!! $diff !!}</pre>html\\-rendered
+
+    @elseif ($diffType == 'html-rendered')
+        <div style="width: 100%; height: 100vh;">
+            <iframe id="iframe" sandbox srcdoc="{{ $diff }}"></iframe>
+        </div>
     @else
-        <pre>{!! $formattedHtml !!}</pre>
+        What do you want to show here?
     @endif
 @endsection

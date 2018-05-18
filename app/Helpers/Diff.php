@@ -35,7 +35,7 @@ abstract class Diff
         FineDiff::$wordGranularity
         FineDiff::$characterGranularity (default)
          */
-        $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$characterGranularity);
+        $opCodes = FineDiff::getDiffOpcodes($from, $to, FineDiff::$wordGranularity);
         return FineDiffHTML::renderDiffToHTMLFromOpcodes($from, $opCodes);
     }
 }
