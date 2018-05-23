@@ -112,6 +112,4 @@ HTML;
             return 'http://govbackup.org/' . $type . '/' . $url;
         }));
     }
-
-    // TODO test rewriting vs base url
 }
