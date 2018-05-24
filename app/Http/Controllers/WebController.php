@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\Diff;
 use App\Helpers\EpfHelpers;
+use App\Helpers\Reply;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
@@ -147,17 +148,45 @@ class WebController extends LaravelController
         return null;
     }
 
-    public function get($timestamp, $url)
+    public function get($timestamp_string, $url)
     {
         $url = $this->prepareUrl($url);
         try {
-            $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp);
+            $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp_string);
 
-            $object = $this->repo->get($url, $timestamp, true);
+            $object = $this->repo->get($url, $timestamp, 'non-transformed');
 
             if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
                 return $maybe_redirect;
             }
+
+            // reply content
+            $domains = collect([]);
+            $version = $object->getVersion();
+            $rewrite = function($link, $type) use($url, $timestamp_string, &$domains) {
+                $parsed = Reply::createAbsoluteStandardizedUrl($link, $url, true);
+
+                if ($parsed == null) {
+                    // don't rewrite it
+                    return null;
+                }
+
+                // don't rewrite popular domain outside of our scope
+                // TODO it would be better to have a catalog of all domains scraped, but we would have to cache it for efficiency
+                if (in_array($parsed['host'], ['fonts.googleapis.com'])) {
+                    return null;
+                }
+
+                return '/' . $type . '/' . $timestamp_string . '/' . Reply::unparse_url($parsed);
+            };
+
+            if ($version->getMediaType() == 'text/html') {
+                $version->setBody(Reply::replyHtml($version->getBody(), $rewrite));
+
+            } else if ($version->getMediaType() == 'text/css') {
+                $version->setBody(Reply::replyCss($version->getBody(), $rewrite));
+            }
+            // reply content end
 
             return $this->maybeStreamResponse($object->getVersion());
 
@@ -172,7 +201,7 @@ class WebController extends LaravelController
             } else {
                 // redirect temporary (till this resource will be scraped)
                 // TODO Shouldn't assume http, but use original scheme
-                return redirect()->away('http://' . $url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
+                return redirect()->away($url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
             }
         }
     }
