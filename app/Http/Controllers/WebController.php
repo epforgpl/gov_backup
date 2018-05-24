@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\ResourceNotIndexedException;
 use App\Helpers\Diff;
 use App\Helpers\EpfHelpers;
+use App\Helpers\Reply;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Repositories\WebRepository;
@@ -63,6 +64,7 @@ class WebController extends LaravelController
 
         $requestedTimestamp = self::parseTimestamp($requestedTimestampString);
         $object = $this->repo->get($url, $requestedTimestamp);
+        // TODO handle resource is not scraped, implement https://github.com/epforgpl/gov_backup/issues/30
 
         if ($maybe_redirect = self::handleRedirect($object, $requestedTimestampString)) {
             return $maybe_redirect;
@@ -147,17 +149,55 @@ class WebController extends LaravelController
         return null;
     }
 
-    public function get($timestamp, $url)
+    public function get($timestamp_string, $url)
     {
         $url = $this->prepareUrl($url);
         try {
-            $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp);
+            $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp_string);
 
-            $object = $this->repo->get($url, $timestamp, true);
+            $object = $this->repo->get($url, $timestamp, 'basic');
 
             if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
                 return $maybe_redirect;
             }
+
+            // reply content
+            $domains = collect([]);
+            $version = $object->getVersion();
+            $rewrite = function($link, $type) use($url, $timestamp_string, &$domains) {
+                $parsed = Reply::createAbsoluteStandardizedUrl($link, $url, true);
+
+                if ($parsed == null) {
+                    // don't rewrite it
+                    return null;
+                }
+
+                // don't rewrite popular domain outside of our scope
+                // TODO it would be better to have a catalog of all domains scraped,
+                // but we would have to cache it for efficiency https://github.com/epforgpl/gov_backup/issues/73
+                if (in_array($parsed['host'], [
+                    'fonts.googleapis.com', 'fonts.gstatic.com', 'www.google.com', 'ajax.googleapis.com',
+                    'googleads.g.doubleclick.net', 'ssl.google-analytics.com',
+                    'i.timg.com',
+                    'abs.twimg.com', 'pbs.twimg.com', // i wiele więcej subdomen
+                    'platform.twitter.com', 'syndication.twitter.com',
+                    'connect.facebook.net', 'static.ak.fbcdn.net', 'staticxx.facebook.com',
+                    'static.doubleclick.net',
+                    'www.youtube.com'
+                ])) {
+                    return null;
+                }
+
+                return '/' . $type . '/' . $timestamp_string . '/' . Reply::unparse_url($parsed);
+            };
+
+            if ($version->getMediaType() == 'text/html') {
+                $version->setBody(Reply::replyHtml($version->getBody(), $rewrite));
+
+            } else if ($version->getMediaType() == 'text/css') {
+                $version->setBody(Reply::replyCss($version->getBody(), $rewrite));
+            }
+            // reply content end
 
             return $this->maybeStreamResponse($object->getVersion());
 
@@ -171,8 +211,7 @@ class WebController extends LaravelController
                 throw $ex;
             } else {
                 // redirect temporary (till this resource will be scraped)
-                // TODO Shouldn't assume http, but use original scheme
-                return redirect()->away('http://' . $url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
+                return redirect()->away($url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
             }
         }
     }
@@ -188,7 +227,7 @@ class WebController extends LaravelController
             // TODO shouldn't we redirect to "right" order or at least switch timestamps?
         }
 
-        $contentView = 'non-transformed';
+        $contentView = 'basic';
         if ($type == 'text') {
             $contentView = 'text';
         }
@@ -212,6 +251,7 @@ class WebController extends LaravelController
         if (!Diff::diffable($toObject->getVersion()->getMediaType())) {
             throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
         }
+        // TODO handle above exceptions on the frontend as well as ContentViewNotFound
 
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();
