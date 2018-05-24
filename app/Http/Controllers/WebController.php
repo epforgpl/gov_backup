@@ -155,7 +155,7 @@ class WebController extends LaravelController
         try {
             $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp_string);
 
-            $object = $this->repo->get($url, $timestamp, 'non-transformed');
+            $object = $this->repo->get($url, $timestamp, 'basic');
 
             if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
                 return $maybe_redirect;
@@ -227,7 +227,7 @@ class WebController extends LaravelController
             // TODO shouldn't we redirect to "right" order or at least switch timestamps?
         }
 
-        $contentView = 'non-transformed';
+        $contentView = 'basic';
         if ($type == 'text') {
             $contentView = 'text';
         }
@@ -251,6 +251,7 @@ class WebController extends LaravelController
         if (!Diff::diffable($toObject->getVersion()->getMediaType())) {
             throw new \Exception($fromObject->getVersion()->getMediaType() . " media type is not diffable.");
         }
+        // TODO handle above exceptions on the frontend as well as ContentViewNotFound
 
         $from = $fromObject->getVersion()->getBody();
         $to = $toObject->getVersion()->getBody();

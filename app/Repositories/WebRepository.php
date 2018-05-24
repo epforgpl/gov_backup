@@ -87,6 +87,7 @@ class WebRepository
     }
 
     // TODO at which timestamp this should be loaded?
+    // TODO is it used? #cleaning
     public function getById(int $id, $loadContent = false)
     {
         $res = $this->ES->search([
@@ -128,11 +129,11 @@ class WebRepository
      *
      * @param string $url World-facing url that user is interested in
      * @param \DateTime $requestedTimestamp Timestamp at which resource should be returned. Actual returned revision may differ
-     * @param $contentView Which type of content to load, defaults to false
+     * @param $contentView Which type of content to load, defaults to null = don't load
      * @return WebObject
      * @throws ResourceNotIndexedException
      */
-    public function get(string $url, \DateTime $requestedTimestamp, $contentView = false): WebObject
+    public function get(string $url, \DateTime $requestedTimestamp, $contentView = null): WebObject
     {
         $urlp = trim($url);
         if( !$urlp ) {
@@ -226,28 +227,24 @@ class WebRepository
         $web_object->setLastSeen(WebRepository::parseESDate($hit['_source']['data']['web_objects_revisions']['timestamp']));
 
         if ($loadCurrentVersionContent) {
-            $this->loadVersionContent($web_object->getVersion(), true);
+            $this->loadVersionContent($web_object->getVersion(), 'basic');
         }
 
         return $web_object;
     }
 
-    public function loadVersionContent(WebObjectVersion &$version, $contentView = true)
+    public function loadVersionContent(WebObjectVersion &$version, $contentView)
     {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
 
-        if ($contentView === true) {
-            if (!$version->isBodyProcessed()) {
-                throw new ContentViewNotFound('transformed', $version->getId());
-            }
-            $uri .= '_transformed';
-        }
         if ($contentView === 'text') {
             if (!$version->hasBodyText()) {
                 throw new ContentViewNotFound($contentView, $version->getId());
             } else {
                 $uri .= '-text';
             }
+        } else if ($contentView === 'basic') {
+            // there is no prefix for it
         }
 
         $response = $this->storage->getObject($this->bucket, $uri);
