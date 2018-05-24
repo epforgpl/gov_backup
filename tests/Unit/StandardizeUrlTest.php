@@ -89,4 +89,9 @@ class StandardizeUrlTest extends TestCase
     public function testFragment() {
         $this->assertStandardUrl('http://domain.pl/raz#fragment','http://other.pl/raz?var=param', 'http://domain.pl/raz#fragment');
     }
+
+    public function testUnparseArray() {
+        $parsed = Reply::createAbsoluteStandardizedUrl('http://domain.pl','http://other.pl', true);
+        self::assertEquals('http://domain.pl', Reply::unparse_url($parsed));
+    }
 }

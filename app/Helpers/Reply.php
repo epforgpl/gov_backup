@@ -11,12 +11,49 @@ namespace App\Helpers;
 
 abstract class Reply
 {
+    public static function detectEncoding(\DOMDocument $doc) {
+        $xPath = new \DOMXPath($doc);
+        /**
+         * @var $nodeList \DOMNodeList
+         */
+        $nodeList = $xPath->query("head/meta/@charset");
+        if ($nodeList->length) {
+            return trim($nodeList->item(0)->textContent);
+        }
+
+        $nodeList = $xPath->query("head/meta[@http-equiv='content-type']/@content");
+        if ($nodeList->length) {
+            if (preg_match("/charset=(.+)/", $nodeList->item(0)->textContent, $matches)) {
+                return $matches[1];
+            }
+        }
+
+        return null;
+    }
+
     public static function replyHtml($body, $rewrite_callback) {
         $d = new \DOMDocument();
-        $d->loadHTML($body, LIBXML_HTML_NODEFDTD);
+        $d->loadHTML($body, LIBXML_HTML_NODEFDTD | LIBXML_NOERROR);
+        $actualEncoding = self::detectEncoding($d);
+
+        // Load HTML won't be able to guess encoding for websites who implement it wrong (not as a first tag / in the first 255 chars)
+        // see http://php.net/manual/en/domdocument.loadhtml.php#78243 for explanation
+        // we need to do a hack http://php.net/manual/en/domdocument.loadhtml.php#95251 to make sure it's read properly
+        if ($actualEncoding !== null) {
+            // TODO use regexps to detectEncoding instead of DOM not to rebuilt it
+            // TODO test handling different encodings and meta tags so we don't rebuild it without a good reason
+            $d->loadHTML("<?xml encoding=\"$actualEncoding\">" .$body, LIBXML_HTML_NODEFDTD | LIBXML_NOERROR);
+            foreach ($d->childNodes as $item)
+                if ($item->nodeType == XML_PI_NODE)
+                    $d->removeChild($item); // remove hack
+
+            $d->encoding = $encoding = $actualEncoding;
+        }
+
+        $xPath = new \DOMXPath($d);
 
         // rewrite meta tags
-        $meta_tags = (new \DOMXPath($d))->query("head//meta[@property='og:image']");
+        $meta_tags = $xPath->query("head//meta[@property='og:image']");
         foreach( $meta_tags as $meta ) {
             /**
              * @var $meta \DOMElement
@@ -27,7 +64,7 @@ abstract class Reply
         }
 
         // rewrite external scripts
-        $scripts = (new \DOMXPath($d))->query("//script");
+        $scripts = $xPath->query("//script");
         foreach ($scripts as $script) {
             if ($src = $script->getAttribute('src')) {
                 if ($rewritten = $rewrite_callback($src, 'get')) {
@@ -36,7 +73,7 @@ abstract class Reply
             }
         }
 
-        $links = (new \DOMXPath($d))->query("//link");
+        $links = $xPath->query("//link");
         foreach( $links as $a ) {
             if( $href = $a->getAttribute('href') ) {
                 if( $url = $rewrite_callback($href, 'get') ) {
@@ -46,7 +83,7 @@ abstract class Reply
         }
 
         // rewrite all the links
-        $anchors = (new \DOMXPath($d))->query("//a");
+        $anchors = $xPath->query("//a");
         foreach( $anchors as $a ) {
             /**
              * @var $a \DOMElement
@@ -80,7 +117,7 @@ abstract class Reply
         }
 
         // rewrite images
-        $images = (new \DOMXPath($d))->query("//img");
+        $images = $xPath->query("//img");
         foreach( $images as $a ) {
             if( $src = $a->getAttribute('src') ) {
                 if( $rewritten = $rewrite_callback($src, 'get') ) {
@@ -95,7 +132,7 @@ abstract class Reply
         }
 
         // rewrite input
-        $inputs = (new \DOMXPath($d))->query("//input");
+        $inputs = $xPath->query("//input");
         foreach( $inputs as $a ) {
             if( $src = $a->getAttribute('src') ) {
                 if( $rewritten = $rewrite_callback($src, 'get') ) {
@@ -140,11 +177,11 @@ abstract class Reply
      *
      * @param string $url
      * @param string $base_url
-     * @param bool $returnArray if not then string is build
+     * @param bool $returnParsed if not then string is build
      * @return array|string|null
      * @throws \Exception
      */
-    public static function createAbsoluteStandardizedUrl(string $url, string $base_url, bool $returnArray = false)
+    public static function createAbsoluteStandardizedUrl(string $url, string $base_url, bool $returnParsed = false)
     {
         // Validate $url
         $url = trim($url);
@@ -250,7 +287,7 @@ abstract class Reply
             $parsed['query'] = http_build_query($query);
         }
 
-        if ($returnArray) {
+        if ($returnParsed) {
             $array = [];
             foreach (['scheme', 'host', 'port', 'user', 'pass', 'path', 'query'] as $field) {
                 $array[$field] = $parsed[$field] ?? '';
@@ -264,15 +301,15 @@ abstract class Reply
 
     public static function unparse_url($parsed_url)
     {
-        $scheme = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-        $host = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-        $port = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
-        $user = isset($parsed_url['user']) ? $parsed_url['user'] : '';
-        $pass = isset($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
+        $scheme = !empty($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host = !empty($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port = !empty($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $user = !empty($parsed_url['user']) ? $parsed_url['user'] : '';
+        $pass = !empty($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
-        $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-        $query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
-        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+        $path = !empty($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query = !empty($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+        $fragment = !empty($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
 
         return "$scheme$user$pass$host$port$path$query$fragment";
     }
