@@ -64,6 +64,7 @@ class WebController extends LaravelController
 
         $requestedTimestamp = self::parseTimestamp($requestedTimestampString);
         $object = $this->repo->get($url, $requestedTimestamp);
+        // TODO handle resource is not scraped, implement https://github.com/epforgpl/gov_backup/issues/30
 
         if ($maybe_redirect = self::handleRedirect($object, $requestedTimestampString)) {
             return $maybe_redirect;
@@ -172,8 +173,18 @@ class WebController extends LaravelController
                 }
 
                 // don't rewrite popular domain outside of our scope
-                // TODO it would be better to have a catalog of all domains scraped, but we would have to cache it for efficiency
-                if (in_array($parsed['host'], ['fonts.googleapis.com'])) {
+                // TODO it would be better to have a catalog of all domains scraped,
+                // but we would have to cache it for efficiency https://github.com/epforgpl/gov_backup/issues/73
+                if (in_array($parsed['host'], [
+                    'fonts.googleapis.com', 'fonts.gstatic.com', 'www.google.com', 'ajax.googleapis.com',
+                    'googleads.g.doubleclick.net', 'ssl.google-analytics.com',
+                    'i.timg.com',
+                    'abs.twimg.com', 'pbs.twimg.com', // i wiele więcej subdomen
+                    'platform.twitter.com', 'syndication.twitter.com',
+                    'connect.facebook.net', 'static.ak.fbcdn.net', 'staticxx.facebook.com',
+                    'static.doubleclick.net',
+                    'www.youtube.com'
+                ])) {
                     return null;
                 }
 
@@ -200,7 +211,6 @@ class WebController extends LaravelController
                 throw $ex;
             } else {
                 // redirect temporary (till this resource will be scraped)
-                // TODO Shouldn't assume http, but use original scheme
                 return redirect()->away($url, 302, ['X-GovBackup' => 'NotScraped-RedirectingToOriginal']);
             }
         }
