@@ -182,7 +182,12 @@ class WebController extends LaravelController
                     return null;
                 }
 
-                return '/' . $type . '/' . $timestamp_string . '/' . Reply::unparse_url($parsed);
+                $route = $type == 'get' ? 'get' : 'view';
+
+                return route($route, [
+                    'timestamp' => $timestamp_string,
+                    'url' => Reply::unparse_url($parsed)],
+                    true);
             };
 
             if ($version->getMediaType() == 'text/html') {
