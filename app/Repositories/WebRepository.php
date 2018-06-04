@@ -340,18 +340,14 @@ class WebRepository
           "dataset": "web_objects_versions"
         }
       },
-      "must": {
-        "match": {
-          "text": $query
-        }
-      },
-      "should": [
+      "must": [
         {
           "multi_match": {
             "query": $query,
             "fields": [
               "data.web_objects_versions.title",
-              "data.web_objects_versions.description"
+              "data.web_objects_versions.url",
+              "text"
             ]
           }
         }
@@ -361,7 +357,7 @@ class WebRepository
   "aggs": {
     "top-urls": {
       "terms": {
-        "field": "data.web_objects.url",
+        "field": "data.web_objects_versions.url.keyword",
         "size": 10,
         "order": {
           "top_hit": "desc"
@@ -382,6 +378,9 @@ class WebRepository
             "highlight": {
               "fields": {
                 "data.web_objects_versions.title": {
+                    "number_of_fragments" : 1
+                },
+                "data.web_objects_versions.url": {
                     "number_of_fragments" : 1
                 },
                 "text": {

@@ -39,7 +39,8 @@ class WebController extends LaravelController
         }
 
         return view('home', [
-            'textResults' => $textResults
+            'textResults' => $textResults,
+            'textQuery' => $textQuery
         ]);
     }
 
