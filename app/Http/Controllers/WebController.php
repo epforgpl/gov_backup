@@ -33,20 +33,13 @@ class WebController extends LaravelController
     public function home(Request $request)
     {
         $textQuery = $request->query('search');
-        $urlQuery = $request->query('url');
-
-        $textResults = null;
-        $urlResults = null;
+        $textResults = [];
         if ($textQuery) {
             $textResults = $this->repo->searchText($textQuery);
         }
-        else if ($urlQuery) {
-            $urlResults = $this->repo->searchUrl($urlQuery);
-        }
 
         return view('home', [
-            'textResults' => $textResults,
-            'urlResults' => $urlResults
+            'textResults' => $textResults
         ]);
     }
 
@@ -291,16 +284,6 @@ class WebController extends LaravelController
     public function searchText($query, $filters = [])
     {
         return $this->repo->searchText($query, $filters);
-    }
-
-    /**
-     * Search for given URL
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function searchUrl($query, $filters = [])
-    {
-        return $this->repo->searchUrl($query, $filters);
     }
 
     private function prepareUrl($url)

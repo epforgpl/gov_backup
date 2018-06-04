@@ -322,66 +322,6 @@ class WebRepository
     }
 
     /**
-     * Search for given URL
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function searchUrl(string $query, $filters = []) {
-        $query = json_encode($query);
-
-        $request = <<<JSON
-GET mojepanstwo_v1/objects/1/_explain
-{
-  "query": {
-    "bool": {
-      "filter": {
-          "term": {"dataset": "web_objects"}
-      },
-      "should": [
-        {"wildcard" : { 
-          "data.web_objects.url" : "*trybunal*" 
-        }},
-        {"match": { // this doesn't work because it's keyword (we have to add extra field to match it)
-          "data.web_objects.url": "trybunal"
-        }}
-      ]
-    }
-  }
-}
-JSON;
-//
-//        $response = $this->ES->search([
-//            'index' => 'mojepanstwo_v1',
-//            'type' => 'objects',
-//            'body' => $request
-//        ]);
-
-        // TODO for now it is mocked
-        $results = <<<JSON
-[
-{
-"url": "http://trybunal.gov.pl/postepowanie-i-orzeczenia/postanowienia/nbrowse/5/",
-"data": {
-    "web_objects_versions": {
-        "image_url": null,
-        "description": null,
-        "id": "833",
-        "title": "Trybunał Konstytucyjny: Postanowienia",
-        "object_id": "961"
-    }
-},
-"highlight": {
-    "data.web_objects_versions.title": [ "<em>Trybunał</em> Konstytucyjny: Postanowienia" ],
-    "data.web_objects.url": [ "http://<em>trybunal</em>.gov.pl/postepowanie-i-orzeczenia/postanowienia/nbrowse/5/" ]
-}
-}
-]
-JSON;
-
-        return json_decode($results, true);
-    }
-
-    /**
      * Search for given text
      *
      * @return \Illuminate\Http\Response

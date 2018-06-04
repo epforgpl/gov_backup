@@ -25,8 +25,7 @@ Route::get('/get/{timestamp}/{url}', 'WebController@get')
     ->name('get');
 Route::get('/thumb//{id}', 'WebController@thumb');
 
-Route::get('/search/text/{query}', 'WebController@searchText')->name('searchText');
-Route::get('/search/url/{query}', 'WebController@searchUrl')->name('searchUrl');
+Route::get('/search/{query}', 'WebController@searchText')->name('searchText');
 
 Route::get('/diff/{timestamp_from}..{timestamp_to}/{type}/{url}', 'WebController@diff')
     ->where('url', '.+?')
