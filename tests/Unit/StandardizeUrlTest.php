@@ -86,8 +86,24 @@ class StandardizeUrlTest extends TestCase
         $this->assertStandardUrl('http://domain.pl/raz?var=param2','http://domain.pl/raz?var=param', '?var=param2');
     }
 
-    public function testFragment() {
+    public function testFragmentExternal() {
         $this->assertStandardUrl('http://domain.pl/raz#fragment','http://other.pl/raz?var=param', 'http://domain.pl/raz#fragment');
+    }
+
+    public function testLocalFragmentSolo() {
+        $this->assertStandardUrl('#fragment','http://domain.pl/raz', '#fragment');
+    }
+
+    public function testLocalFragmentPath() {
+        $this->assertStandardUrl('#fragment','http://domain.pl/raz', '/raz#fragment');
+    }
+
+    public function testLocalFragmentFull() {
+        $this->assertStandardUrl('#fragment','http://domain.pl/raz', 'http://domain.pl/raz#fragment');
+    }
+
+    public function testLocalFragmentFullUppercase() {
+        $this->assertStandardUrl('#fragment','http://DOMAIN.pl/raz', 'http://domain.pl/raz#fragment');
     }
 
     public function testUnparseArray() {

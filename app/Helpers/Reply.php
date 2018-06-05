@@ -89,7 +89,6 @@ abstract class Reply
              * @var $a \DOMElement
              */
             if ($url = $a->getAttribute('href')) {
-                // TODO this will be handled by createAbsoluteUrl
                 // don't rewrite urls that don't point to resources
                 foreach (['file', 'mailto', 'data', 'javascript'] as $prefix) {
                     if (stripos($url, $prefix . ':') === 0) {
@@ -97,20 +96,19 @@ abstract class Reply
                     }
                 }
 
-                if (stripos($url, '#') === 0) {
-                    // don't rewrite internal fragments
-                    continue;
-                }
-
                 // rewrite as an archived link to our website (type = 'web')
                 if ($rewritten = $rewrite_callback($url, 'web')) {
+                    if (stripos($rewritten, '#') === 0) {
+                        // don't rewrite internal fragments
+                        continue;
+                    }
+
                     $a->setAttribute('href', $rewritten);
                     $a->setAttribute('target', '_top');
 
                 } else {
                     // url out of archiving scope
                     // if it's not a fragment within page then make a link to open in a new page
-                    // TODO test how fragments behave out and in of the page
                     $a->setAttribute('target', '_blank');
                 }
             }
@@ -190,13 +188,8 @@ abstract class Reply
             throw new \InvalidArgumentException('Urls cannot be empty.');
         }
 
-        // Skip local fragments
-        if (strpos($url, '#') === 0) {
-            return null;
-        }
-
         // Skip urls that don't point to resources
-        foreach (['fail', 'mailto', 'data', 'javascript'] as $prefix) {
+        foreach (['file', 'mailto', 'data', 'javascript'] as $prefix) {
             if (stripos($url, $prefix . ':') === 0) {
                 return null;
             }
@@ -209,20 +202,15 @@ abstract class Reply
             $parsed['path'] = '';
         }
 
+        if(!$base_parsed = parse_url($base_url)) {
+            throw new \Exception("Malformed url: $base_url");
+        }
+        if (empty($base_parsed['path'])) {
+            $base_parsed['path'] = '';
+        }
+
+        // Fill in scheme and host if missing
         if (empty($parsed['scheme']) || empty($parsed['host'])) {
-            if (!$base_url) {
-                throw new \Exception("Url is relative and there is no base url to resolve it");
-            }
-
-            if(!$base_parsed = parse_url($base_url)) {
-                throw new \Exception("Malformed url: $base_url");
-            }
-
-            if (empty($base_parsed['path'])) {
-                $base_parsed['path'] = '';
-            }
-
-            // fill in scheme and host if missing
             foreach (['scheme', 'host'] as $field) {
                 if (empty($parsed[$field])) {
                     $parsed[$field] = $base_parsed[$field];
@@ -279,6 +267,25 @@ abstract class Reply
         // Standardize url
         // Standardize: lowercase host
         $parsed['host'] = strtolower($parsed['host']);
+        $base_parsed['host'] = strtolower($base_parsed['host']);
+
+        // fill in empty fields
+        foreach (['scheme', 'host', 'port', 'user', 'pass', 'path', 'query', 'fragment'] as $field) {
+            $parsed[$field] = $parsed[$field] ?? '';
+        }
+
+        // Skip local fragments, such as '#frag' or '/path#frag' or even those with hosts
+        if (!empty($parsed['fragment']
+            and $parsed['host'] == $base_parsed['host']
+            and $parsed['path'] == $base_parsed['path']
+        )) {
+            if ($returnParsed) {
+                // someone should handle this case it outside if calling with $returnParsed == true
+
+            } else {
+                return '#' . $parsed['fragment'];
+            }
+        }
 
         // Standardize: sort query params
         if (!empty($parsed['query'])) {
@@ -288,12 +295,7 @@ abstract class Reply
         }
 
         if ($returnParsed) {
-            $array = [];
-            foreach (['scheme', 'host', 'port', 'user', 'pass', 'path', 'query'] as $field) {
-                $array[$field] = $parsed[$field] ?? '';
-            }
-
-            return $array;
+            return $parsed;
         }
 
         return self::unparse_url($parsed);

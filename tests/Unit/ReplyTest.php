@@ -106,7 +106,10 @@ HTML;
 HTML;
 
         self::assertEquals($expected, Reply::replyHtml($html, function($url, $type) {
-            if ($url == 'http://external.org') {
+            if (starts_with($url, '#')) {
+                return $url;
+            }
+            if ($url == 'http://external.org' or starts_with($url, '#')) {
                 return null;
             }
             return 'http://govbackup.org/' . $type . '/' . $url;
