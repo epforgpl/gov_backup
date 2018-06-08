@@ -22,21 +22,7 @@ class StandardizeUrlTest extends TestCase
     }
 
     private function assertStandardUrl($expected, $base_url, $relative_url) {
-        $standardized = Reply::createAbsoluteStandardizedUrl($relative_url,$base_url);
-//        $all_url_fields = [
-//            'scheme',
-//            'host',
-//            'port',
-//            'user',
-//            'pass',
-//            'path',
-//            'query',
-//        ];
-//        foreach ($all_url_fields as $key) {
-//            if (!$parsed[$key]) {
-//                unset($parsed[$key]);
-//            }
-//        }
+        $standardized = Reply::createAbsoluteStandardizedUrl($relative_url, $base_url);
 
         $this->assertEquals($expected, $standardized);
     }
@@ -88,22 +74,6 @@ class StandardizeUrlTest extends TestCase
 
     public function testFragmentExternal() {
         $this->assertStandardUrl('http://domain.pl/raz#fragment','http://other.pl/raz?var=param', 'http://domain.pl/raz#fragment');
-    }
-
-    public function testLocalFragmentSolo() {
-        $this->assertStandardUrl('#fragment','http://domain.pl/raz', '#fragment');
-    }
-
-    public function testLocalFragmentPath() {
-        $this->assertStandardUrl('#fragment','http://domain.pl/raz', '/raz#fragment');
-    }
-
-    public function testLocalFragmentFull() {
-        $this->assertStandardUrl('#fragment','http://domain.pl/raz', 'http://domain.pl/raz#fragment');
-    }
-
-    public function testLocalFragmentFullUppercase() {
-        $this->assertStandardUrl('#fragment','http://DOMAIN.pl/raz', 'http://domain.pl/raz#fragment');
     }
 
     public function testUnparseArray() {

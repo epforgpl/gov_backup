@@ -155,21 +155,19 @@ class WebController extends LaravelController
                 return $maybe_redirect;
             }
 
+            // Make sure it's original link
+            // - Laravel tends to cut trailing slashes from `url`
+            // - to make sure we use scheme everywhere until https://github.com/epforgpl/gov_backup/issues/79
+            $url = $object->getWebUrl();
+
             // reply content
             $domains = collect([]);
             $version = $object->getVersion();
-            $rewrite = function($link, $type) use($url, $timestamp_string, &$domains) {
-                $parsed = Reply::createAbsoluteStandardizedUrl($link, $url, true);
-
-                if ($parsed == null) {
-                    // don't rewrite it
-                    return null;
-                }
-
+            $rewrite = function(array $parsed_url, string $type) use($url, $timestamp_string, &$domains) {
                 // don't rewrite popular domain outside of our scope
                 // TODO it would be better to have a catalog of all domains scraped,
                 // but we would have to cache it for efficiency https://github.com/epforgpl/gov_backup/issues/73
-                if (in_array($parsed['host'], [
+                if (in_array($parsed_url['host'], [
                     'fonts.googleapis.com', 'fonts.gstatic.com', 'www.google.com', 'ajax.googleapis.com',
                     'googleads.g.doubleclick.net', 'ssl.google-analytics.com',
                     'i.timg.com',
@@ -186,15 +184,15 @@ class WebController extends LaravelController
 
                 return route($route, [
                     'timestamp' => $timestamp_string,
-                    'url' => Reply::unparse_url($parsed)],
+                    'url' => Reply::unparse_url($parsed_url)],
                     true);
             };
 
             if ($version->getMediaType() == 'text/html') {
-                $version->setBody(Reply::replyHtml($version->getBody(), $rewrite));
+                $version->setBody(Reply::replyHtml($version->getBody(), $url, $rewrite));
 
             } else if ($version->getMediaType() == 'text/css') {
-                $version->setBody(Reply::replyCss($version->getBody(), $rewrite));
+                $version->setBody(Reply::replyCss($version->getBody(), $url, $rewrite));
             }
             // reply content end
 

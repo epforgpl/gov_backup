@@ -31,7 +31,13 @@ abstract class Reply
         return null;
     }
 
-    public static function replyHtml($body, $rewrite_callback) {
+    /**
+     * @param $body
+     * @param string $page_url Replied page URL
+     * @param callable $route_govbackup Rewrites absolute page url into govbackup link
+     * @return string
+     */
+    public static function replyHtml($body, string $page_url, callable $route_govbackup) {
         $d = new \DOMDocument();
         $d->loadHTML($body, LIBXML_HTML_NODEFDTD | LIBXML_NOERROR);
         $actualEncoding = self::detectEncoding($d);
@@ -51,6 +57,58 @@ abstract class Reply
         }
 
         $xPath = new \DOMXPath($d);
+
+        $page_url_parsed = parse_url($page_url);
+        $page_url_parsed['host'] = strtolower($page_url_parsed['host']);
+
+        // set $base_url, overriding with <base> tag if present
+        /**
+         * @var \DOMNodeList
+         */
+        $base_tags = $xPath->query("head/base");
+        $base_url = $page_url;
+
+        if ($base_tags->length) {
+            $base_tag = $base_tags->item(0);
+
+            if ($base_href = $base_tag->getAttribute('href')) {
+                $base_href_parsed = parse_url($base_href);
+
+                $base_parsed = parse_url($base_url);
+
+                // overwrite path
+                $base_parsed['path'] = $base_href_parsed['path'] ?? ($base_parsed['path'] ?? '');
+
+                // overwrite host & scheme if $base_href is relative
+                $base_parsed['host'] = strtolower($base_href_parsed['host']) ?? $base_parsed['host'];
+                $base_parsed['scheme'] = $base_href_parsed['scheme'] ?? $base_parsed['scheme'];
+
+                $base_url = Reply::unparse_url($base_parsed);
+            }
+            $base_tag->parentNode->removeChild($base_tag);
+        }
+        // end detect <base> tag
+
+
+        // do a pre- and post-processing of the url
+        $rewrite_callback = function($url, $type) use ($route_govbackup, $base_url, $page_url_parsed) {
+            $parsed = Reply::createAbsoluteStandardizedUrl($url, $base_url, true);
+
+            if ($parsed == null) {
+                // external => don't rewrite it
+                return null;
+            }
+
+            // Skip local fragments, such as '#frag' or '/path#frag' or even those with hosts
+            if (!empty($parsed['fragment'])
+                and $parsed['host'] == $page_url_parsed['host']
+                and $parsed['path'] == (isset($page_url_parsed['path']) ? $page_url_parsed['path'] : '/')
+            ) {
+                return '#' . $parsed['fragment'];
+            }
+
+            return $route_govbackup($parsed, $type);
+        };
 
         // rewrite meta tags
         $meta_tags = $xPath->query("head//meta[@property='og:image']");
@@ -98,13 +156,12 @@ abstract class Reply
 
                 // rewrite as an archived link to our website (type = 'web')
                 if ($rewritten = $rewrite_callback($url, 'web')) {
-                    if (stripos($rewritten, '#') === 0) {
-                        // don't rewrite internal fragments
-                        continue;
-                    }
-
                     $a->setAttribute('href', $rewritten);
-                    $a->setAttribute('target', '_top');
+
+                    if (stripos($rewritten, '#') !== 0) {
+                        // don't retarget internal fragments, other links yes
+                        $a->setAttribute('target', '_top');
+                    }
 
                 } else {
                     // url out of archiving scope
@@ -142,7 +199,23 @@ abstract class Reply
         return $d->saveHTML();
     }
 
-    public static function replyCss($body, callable $rewrite_callback) {
+    /**
+     * @param $body
+     * @param string $base_url Replied resource URL
+     * @param callable $route_govbackup function(array $parsed_url, string $type) Rewrites absolute page url into govbackup link
+     * @return string
+     */
+    public static function replyCss($body, string $base_url, callable $route_govbackup) {
+        // do a pre- and post-processing of the url
+        $rewrite_callback = function($url, $type) use ($route_govbackup, $base_url) {
+            $parsed = Reply::createAbsoluteStandardizedUrl($url, $base_url, true);
+
+            // if external => don't rewrite it
+            if ($parsed == null) return null;
+
+            return $route_govbackup($parsed, $type);
+        };
+
         $body = preg_replace_callback('/url\(\s*(.*?)\s*\)/i', function($url_match) use($rewrite_callback) {
             // get the value inside url()
             $url = $url_match[1];
@@ -267,24 +340,10 @@ abstract class Reply
         // Standardize url
         // Standardize: lowercase host
         $parsed['host'] = strtolower($parsed['host']);
-        $base_parsed['host'] = strtolower($base_parsed['host']);
 
         // fill in empty fields
         foreach (['scheme', 'host', 'port', 'user', 'pass', 'path', 'query', 'fragment'] as $field) {
             $parsed[$field] = $parsed[$field] ?? '';
-        }
-
-        // Skip local fragments, such as '#frag' or '/path#frag' or even those with hosts
-        if (!empty($parsed['fragment']
-            and $parsed['host'] == $base_parsed['host']
-            and $parsed['path'] == $base_parsed['path']
-        )) {
-            if ($returnParsed) {
-                // someone should handle this case it outside if calling with $returnParsed == true
-
-            } else {
-                return '#' . $parsed['fragment'];
-            }
         }
 
         // Standardize: sort query params
