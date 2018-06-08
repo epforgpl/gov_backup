@@ -9,7 +9,7 @@ use App\Repositories\WebRepository;
 class WebObject
 {
 
-    private $id, $portal_id, $scheme, $host, $path, $query, $web_url, $last_seen, $version;
+    private $id, $portal_id, $scheme, $host, $path, $query, $last_seen, $version;
     private $timestamp;
 
     public function __construct($web_object)
@@ -23,11 +23,6 @@ class WebObject
             $this->path = '/';
         }
         $this->query = $web_object['query'];
-
-        $this->web_url = $this->scheme . '://' . $this->host . $this->path;
-        if( $this->query ) {
-            $this->web_url .= '?' . $this->query;
-        }
     }
 
     public function getLastSeen()
@@ -42,7 +37,11 @@ class WebObject
 
     public function getWebUrl(): string
     {
-        return $this->web_url;
+        $url = $this->scheme . '://' . $this->host . $this->path;
+        if( $this->query ) {
+            $url .= '?' . $this->query;
+        }
+        return $url;
     }
 
     public function getId()
