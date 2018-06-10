@@ -3,9 +3,8 @@
 namespace App\Repositories;
 
 use App\Exceptions\ContentViewNotFound;
-use App\Exceptions\MalformedUrlException;
 use App\Exceptions\ResourceNotIndexedException;
-use App\Helpers\EpfHelpers;
+use App\Helpers\Reply;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Storage\iStorage;
@@ -25,65 +24,11 @@ class WebRepository
 
     protected $bucket;
 
-    private $schemes = ['https', 'http'];
-
     public function __construct(\Elasticsearch\Client $es, iStorage $storage)
     {
         $this->ES = $es;
         $this->storage = $storage;
         $this->bucket = config('services.storage.bucket');
-    }
-
-    private function getScheme($url)
-    {
-        if( strpos($url, '//')===0 ) {
-            return '//';
-        }
-        foreach( $this->schemes as $scheme ) {
-            if( stripos($url, $scheme) === 0 ) {
-                return $scheme;
-            }
-        }
-        return false;
-    }
-
-    private function parseUrl($url)
-    {
-        $scheme = $this->getScheme($url);
-        if( !$scheme ) {
-            $url = '//' . $url;
-        }
-        $data = parse_url($url);
-        if ($data === false || !($data['host'])) {
-            throw new MalformedUrlException($url);
-        }
-
-        $host = $data['host'] ?? '';
-        $path = $data['path'] ?? '';
-        $query = $data['query'] ?? '';
-
-        // contract ./ and ../ to get canonical url
-        if( isset($path) ) {
-            $path_parts = explode('/', $path);
-            EpfHelpers::contract_path_parts($path_parts);
-            $path = implode('/', $path_parts);
-        }
-
-        if( $path === '/' ) {
-            $path = '';
-        }
-
-        if( $query ) {
-            parse_str($query, $data);
-            ksort($data);
-            $query = http_build_query($data);
-        }
-
-        return [
-            'host' => $host,
-            'path' => $path,
-            'query' => $query,
-        ];
     }
 
     // TODO at which timestamp this should be loaded?
@@ -135,28 +80,31 @@ class WebRepository
      */
     public function get(string $url, \DateTime $requestedTimestamp, $contentView = null): WebObject
     {
-        $urlp = trim($url);
-        if( !$urlp ) {
+        $url = trim($url);
+        if( !$url ) {
             throw new \InvalidArgumentException('URL is not set');
         }
 
-        $urlp = $this->parseUrl($urlp);
+        // if there is no schema, guess it for now TODO fix it properly https://github.com/epforgpl/gov_backup/issues/79
+        if (stripos($url, '//') === false) {
+            $url = 'http://' . $url;
+        }
+
+        $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
         $object_conditions = [
             ['term' => ['dataset' => 'web_objects_revisions']],
             ['term' => ['data.web_objects.host' => $urlp['host']]],
             ['bool' => [
                 'should' => [
-                    ['term' => ['data.web_objects.path' => $urlp['path']]],
-                    ['term' => ['data.web_objects.path' => $urlp['path'] . '/']]
-                    // TODO try to save paths in a consistent manner to simplify this query
+                    ['term' => ['data.web_objects.path' => $urlp['path']]]
                 ]
             ]],
             ['term' => ['data.web_objects.query' => $urlp['query']]]
         ];
 
         // search for the closest revision
-        $res = $this->ES->search([
+        $search_request = [
             'index' => 'mojepanstwo_v1',
             'type' => 'objects',
             'body' => [
@@ -170,19 +118,21 @@ class WebRepository
                         ],
                         'exp' => [ // return revision with the closest date to requested
                             "data.web_objects_revisions.timestamp" => [
-                                "origin"=> $requestedTimestamp->format('c'),
+                                "origin" => $requestedTimestamp->format('c'),
                                 "scale" => "1d"
                             ],
                         ],
-                        "boost_mode"=>"max"
+                        "boost_mode" => "max"
                     ]
                 ],
                 '_source' => ['data.*'],
             ]
-        ]);
+        ];
+        $res = $this->ES->search($search_request);
 
         if(!isset($res['hits']['hits'][0])) {
-            throw new ResourceNotIndexedException("$url at " . $requestedTimestamp->format('c'));
+            throw new ResourceNotIndexedException("$url at " . $requestedTimestamp->format('c')
+            . "\nQuery: " . json_encode($search_request['body']));
         }
 
         $hit = $res['hits']['hits'][0];
@@ -260,12 +210,12 @@ class WebRepository
      * @return UrlRevision[]
      */
     public function getUrlRevisions($url) {
-        $urlp = trim($url);
-        if( !$urlp ) {
+        $url = trim($url);
+        if( !$url ) {
             throw new \InvalidArgumentException('URL is not set');
         }
 
-        $urlp = $this->parseUrl($urlp);
+        $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
         $must = [
             ['term' => ['dataset' => 'web_objects_revisions']],

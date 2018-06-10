@@ -11,6 +11,8 @@ namespace App\Helpers;
 
 abstract class Reply
 {
+    public const EMPTY_PATH = '/';
+
     public static function detectEncoding(\DOMDocument $doc) {
         $xPath = new \DOMXPath($doc);
         /**
@@ -272,7 +274,7 @@ abstract class Reply
             return null;
         }
         if (empty($parsed['path'])) {
-            $parsed['path'] = '';
+            $parsed['path'] = ''; // '' = not set
         }
 
         if(!$base_parsed = parse_url($base_url)) {
@@ -286,6 +288,7 @@ abstract class Reply
         if (empty($parsed['scheme']) || empty($parsed['host'])) {
             foreach (['scheme', 'host'] as $field) {
                 if (empty($parsed[$field])) {
+                    if (!isset($base_parsed[$field])) throw new \Exception("Base URL should have '$field' set.");
                     $parsed[$field] = $base_parsed[$field];
                 }
                 if (empty($parsed[$field])) {
@@ -319,6 +322,9 @@ abstract class Reply
         // clear duplicated slashes
         $parsed['path'] = preg_replace('/\/+/', '/', $parsed['path']);
 
+        // clear single dot
+        $parsed['path'] = str_replace('/./', '/', $parsed['path']);
+
         // clear contracted url, such as ../
         $path = explode('/', $parsed['path']);
 
@@ -336,6 +342,11 @@ abstract class Reply
         }
 
         $parsed['path'] = implode('/', $path);
+
+        // if after merging path is empty, set it to "standard" empty path
+        if ($parsed['path'] == '') {
+            $parsed['path'] = self::EMPTY_PATH;
+        }
 
         // Standardize url
         // Standardize: lowercase host

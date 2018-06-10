@@ -57,6 +57,13 @@ class StandardizeUrlTest extends TestCase
         $this->assertStandardUrl('http://domain.pl/raz/dwa/osiem','http://domain.pl/raz/dwa/trzy/file', 'siedem/../../osiem');
     }
 
+    public function testUrlContractingSingleDot()
+    {
+        $this->assertStandardUrl('http://domain.pl/raz/dwa','http://domain.pl/', '/./raz/dwa');
+        $this->assertStandardUrl('http://domain.pl/raz/dwa2','http://domain.pl/', './raz/dwa2');
+        $this->assertStandardUrl('http://domain.pl/raz/dwa/trzy/cztery','http://domain.pl/raz/dwa/', 'trzy/./cztery');
+    }
+
     public function testDuplicatedSlashes()
     {
         $this->assertStandardUrl('http://domain.pl/raz/dwa/trzy/cztery','http://domain.pl/raz/dwa//', 'trzy/cztery');
@@ -65,10 +72,18 @@ class StandardizeUrlTest extends TestCase
         $this->assertStandardUrl('http://domain.pl/raz/dwa/trzy/cztery','http://domain.pl///raz/dwa//', 'trzy///cztery');
     }
 
-    public function testQuery()
+    public function testQueryOtherPath()
     {
         $this->assertStandardUrl('http://domain.pl/inny?var2=param2','http://domain.pl/raz?var=param', 'inny?var2=param2');
+    }
+
+    public function testQuerySamePath()
+    {
         $this->assertStandardUrl('http://domain.pl/raz?var2=param2','http://domain.pl/raz?var=param', '?var2=param2');
+    }
+
+    public function testQueryNoPath()
+    {
         $this->assertStandardUrl('http://domain.pl/raz?var=param2','http://domain.pl/raz?var=param', '?var=param2');
     }
 
@@ -77,7 +92,12 @@ class StandardizeUrlTest extends TestCase
     }
 
     public function testUnparseArray() {
+        $parsed = Reply::createAbsoluteStandardizedUrl('http://domain.pl/','http://other.pl', true);
+        self::assertEquals('http://domain.pl/', Reply::unparse_url($parsed));
+    }
+
+    public function testUnparseArrayNoDomainSlash() {
         $parsed = Reply::createAbsoluteStandardizedUrl('http://domain.pl','http://other.pl', true);
-        self::assertEquals('http://domain.pl', Reply::unparse_url($parsed));
+        self::assertEquals('http://domain.pl/', Reply::unparse_url($parsed));
     }
 }
