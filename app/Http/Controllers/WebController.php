@@ -156,7 +156,6 @@ class WebController extends LaravelController
             }
 
             // Make sure it's original link
-            // - Laravel tends to cut trailing slashes from `url`
             // - to make sure we use scheme everywhere until https://github.com/epforgpl/gov_backup/issues/79
             $url = $object->getWebUrl();
 
@@ -292,6 +291,11 @@ class WebController extends LaravelController
 
     private function prepareUrl($url)
     {
+        if (ends_with($this->request->getPathInfo(), '/')) {
+            // Laravel is trailing slashes so we need to re-add it
+            $url .= '/';
+        }
+
         if( $query = $this->request->getQueryString() ) {
             $url .= '?' . $query;
         }
