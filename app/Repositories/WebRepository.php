@@ -276,9 +276,11 @@ class WebRepository
      *
      * @return \Illuminate\Http\Response
      */
-    public function searchText(string $query, $filters = []) {
+    public function searchText(string $query, $search_deleted = false, $filters = []) {
         // escape $query;
         $query =  json_encode( $query );
+
+        $minimum_should_match = $search_deleted ? 0 : 1;
 
         $request = <<<JSON
 {
@@ -290,9 +292,11 @@ class WebRepository
           "dataset": "web_objects_versions"
         }
       },
-      "must": [
+      "minimum_should_match": $minimum_should_match,
+      "should": [
         {
           "multi_match": {
+            "type": "cross_fields",
             "query": $query,
             "fields": [
               "data.web_objects_versions.title",
@@ -349,22 +353,62 @@ class WebRepository
             }
           }
         },
+JSON;
+        if ($search_deleted) {
+            $request .= <<<JSON
+        "matching": {
+          "filter": { 
+            "match": {
+              "text": $query
+            }
+          },
+          "aggs": { "last_seen": { "max": { "field": "data.web_objects_versions.last_seen_date" }}}
+        },
+        "not_matching": {
+          "filter" : { 
+              "bool": {
+                "must_not": {
+                  "match": {
+                    "text": $query
+                  }
+                }
+              }
+          },
+          "aggs": { "first_seen": { "min": { "field": "data.web_objects_versions.first_seen_date" }}}
+        },
+        "deleted phrases: objects with last_not_matching after last matching": {
+            "bucket_selector": {
+                "buckets_path": {
+                  "last_not_matching_date": "not_matching.first_seen",
+                  "last_matching_date": "matching.last_seen"
+                },
+                "script": "params.last_not_matching_date > params.last_matching_date"
+            }
+        }
+JSON;
+        } else {
+            // get best matching version first and last seen dates (TODO it should be max & min really)
+            $request .= <<<JSON
         "first_seen": {
-          "min": {
-            "script": {
-              "lang": "painless",
+                "min": {
+                    "script": {
+                        "lang": "painless",
               "inline": "doc['data.web_objects_versions.first_seen_date']"
             }
           }
         },
         "last_seen": {
-          "min": {
-            "script": {
-              "lang": "painless",
+                "min": {
+                    "script": {
+                        "lang": "painless",
               "inline": "doc['data.web_objects_versions.last_seen_date']"
             }
           }
         }
+JSON;
+        }
+
+        $request .= <<<JSON
       }
     }
   }
@@ -379,21 +423,27 @@ JSON;
 
         $results = [];
         foreach ($response['aggregations']['top-urls']['buckets'] as $b) {
-            $results[] = [
+            $result = [
                 'url' => $b['key'],
                 'versions_count' => $b['doc_count'],
-                'first_seen' => new \DateTime('@'.($b['first_seen']['value']/1000)),
-                'last_seen' => new \DateTime('@'.($b['last_seen']['value']/1000)),
                 'score' => $b['top_hit']['value'],
                 'data' => $b['top_hits']['hits']['hits'][0]['_source']['data'],
                 'highlight' => $b['top_hits']['hits']['hits'][0]['highlight']
             ];
-        }
 
-        // TODO for development in case if ES is not available
-        if (env('MOCK_ES', false)) {
-            // echo json_encode($results);
-            $results = json_decode('[{"url":"trybunal.gov.pl\/postepowanie-i-orzeczenia\/postanowienia\/nbrowse\/5\/","versions_count":1,"first_seen":{"date":"2018-03-01 23:48:36.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-01 23:48:36.000000","timezone_type":1,"timezone":"+00:00"},"score":1.0453555583953857,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"833","title":"Trybuna\u0142 Konstytucyjny: Postanowienia","object_id":"961"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Postanowienia"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Postanowienia\ntrybunal.gov.pl\/postepowanie-i-orzeczenia\/postanowienia\/nbrowse\/5\/","e\/5\/\n Trybuna\u0142<\/em> Konstytucyjny: Postanowienia Przejd\u017a do g\u0142\u00f3wnej nawigacji Przejd\u017a do tre\u015bci Przejd\u017a do","do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha 12 a prasainfo@trybunal","gov.pl Biuletyn Informacji Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Post\u0119powanie","Orzeczenia \u00bb Postanowienia Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Post\u0119powanie i Orzeczenia Wokanda Wyroki"]}},{"url":"trybunal.gov.pl\/postepowanie-i-orzeczenia\/postanowienia\/nbrowse\/7\/","versions_count":1,"first_seen":{"date":"2018-03-01 23:48:49.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-01 23:48:49.000000","timezone_type":1,"timezone":"+00:00"},"score":1.0453555583953857,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"835","title":"Trybuna\u0142 Konstytucyjny: Postanowienia","object_id":"963"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Postanowienia"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Postanowienia\ntrybunal.gov.pl\/postepowanie-i-orzeczenia\/postanowienia\/nbrowse\/7\/","e\/7\/\n Trybuna\u0142<\/em> Konstytucyjny: Postanowienia Przejd\u017a do g\u0142\u00f3wnej nawigacji Przejd\u017a do tre\u015bci Przejd\u017a do","do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha 12 a prasainfo@trybunal","gov.pl Biuletyn Informacji Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Post\u0119powanie","Orzeczenia \u00bb Postanowienia Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Post\u0119powanie i Orzeczenia Wokanda Wyroki"]}},{"url":"trybunal.gov.pl\/postepowanie-i-orzeczenia\/podstawowe-informacje\/instrukcja-korzystania-ze-strony\/","versions_count":1,"first_seen":{"date":"2018-03-01 23:21:02.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-01 23:21:02.000000","timezone_type":1,"timezone":"+00:00"},"score":0.998654842376709,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"562","title":"Trybuna\u0142 Konstytucyjny: Instrukcja korzystania ze strony","object_id":"660"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Instrukcja korzystania ze strony"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Instrukcja korzystania ze strony\ntrybunal.gov.pl\/postepowanie-i-orzeczenia\/p","informacje\/instrukcja-korzystania-ze-strony\/\n Trybuna\u0142<\/em> Konstytucyjny: Instrukcja korzystania ze strony","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","gov.pl Biuletyn Informacji Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Post\u0119powanie","korzystania ze strony Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Post\u0119powanie i Orzeczenia Wokanda Wyroki"]}},{"url":"trybunal.gov.pl\/sprawy-w-trybunale\/katalog\/s\/p-9415\/","versions_count":1,"first_seen":{"date":"2018-03-02 01:52:37.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-02 01:52:37.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9808427095413208,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1260","title":"Trybuna\u0142 Konstytucyjny: Waloryzacja wynagrodze\u0144","object_id":"1427"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Waloryzacja wynagrodze\u0144"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Waloryzacja wynagrodze\u0144\ntrybunal.gov.pl\/sprawy-w-trybunale<\/em>\/katalog\/s\/p-9415\/","\n Trybuna\u0142<\/em> Konstytucyjny: Waloryzacja wynagrodze\u0144 Przejd\u017a do g\u0142\u00f3wnej nawigacji Przejd\u017a do tre\u015bci Przejd\u017a","Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha 12 a prasainfo@trybunal","Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Sprawy w Trybunale<\/em> \u00bb Katalog Orzeczenia","Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Om\u00f3wienia wybranych orzecze\u0144 od 2000 r. Statystyka Katalog 2018"]}},{"url":"trybunal.gov.pl","versions_count":15,"first_seen":{"date":"2018-03-12 18:22:48.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-12 18:22:48.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9644948244094849,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1755","title":"Trybuna\u0142 Konstytucyjny: Trybuna\u0142 Konstytucyjny","object_id":"1"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Trybuna\u0142<\/em> Konstytucyjny"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Trybuna\u0142<\/em> Konstytucyjny\ntrybunal.gov.pl\n Trybuna\u0142<\/em> Konstytucyjny: Trybuna\u0142<\/em> Konstytucyjny","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Post\u0119powanie","Narodowy Dzie\u0144 Pami\u0119ci \u201e\u017bo\u0142nierzy Wykl\u0119tych\u201d Prezes Trybuna\u0142u<\/em> Konstytucyjnego Julia Przy\u0142\u0119bska zosta\u0142a uhonorowana","Galeria zdj\u0119\u0107 siedziby Trybuna\u0142u<\/em> Konstytucyjnego Zeszyty OTK Komunikaty O Trybunale<\/em> e-Publikacje Wiadomo\u015bci"]}},{"url":"trybunal.gov.pl\/en\/news\/press-releases\/after-the-hearing\/art\/9904-ustawa-o-sadzie-najwyzszym-w-zakresie-dot-regulaminu-w-sprawie-wyboru-kandydatow-na-pierwszego-p\/s\/k-317\/","versions_count":1,"first_seen":{"date":"2018-03-01 23:39:58.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-01 23:39:58.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9617329835891724,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"664","title":"Trybuna\u0142 Konstytucyjny: after the hearing","object_id":"784"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: after the hearing"],"text":["Trybuna\u0142<\/em> Konstytucyjny: after the hearing\ntrybunal.gov.pl\/en\/news\/press-releases\/after-the-hearing\/a","e-wyboru-kandydatow-na-pierwszego-p\/s\/k-317\/\n Trybuna\u0142<\/em> Konstytucyjny: after the hearing Jump to Main","Navigation Jump to Content Jump to Footer Navigations Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","gov.pl Biuletyn Informacji Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny # Home \u00bb Hearings \u00bb Press releases","Tribunal Library Case list Links Address \u00a9 Biuro Trybuna\u0142u<\/em> Konstytucyjnego 2018 Report the problem RSS Address"]}},{"url":"trybunal.gov.pl\/sprawy-w-trybunale\/katalog\/s\/sk-3315\/","versions_count":1,"first_seen":{"date":"2018-03-02 02:38:42.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-02 02:38:42.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9602752923965454,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1369","title":"Trybuna\u0142 Konstytucyjny: Wolno\u015b\u0107 dzia\u0142alno\u015bci gospodarczej","object_id":"1536"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Wolno\u015b\u0107 dzia\u0142alno\u015bci gospodarczej"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Wolno\u015b\u0107 dzia\u0142alno\u015bci gospodarczej\ntrybunal.gov.pl\/sprawy-w-trybunale<\/em>\/katalog\/s\/sk-3315\/","\/s\/sk-3315\/\n Trybuna\u0142<\/em> Konstytucyjny: Wolno\u015b\u0107 dzia\u0142alno\u015bci gospodarczej Przejd\u017a do g\u0142\u00f3wnej nawigacji Przejd\u017a","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Sprawy w Trybunale<\/em> \u00bb Katalog Orzeczenia","Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Om\u00f3wienia wybranych orzecze\u0144 od 2000 r. Statystyka Katalog 2018"]}},{"url":"trybunal.gov.pl\/sprawy-w-trybunale\/katalog\/s\/sk-617\/","versions_count":1,"first_seen":{"date":"2018-03-02 00:26:21.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-02 00:26:21.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9602752923965454,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1043","title":"Trybuna\u0142 Konstytucyjny: Ustawa o Policji","object_id":"1210"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Ustawa o Policji"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Ustawa o Policji\ntrybunal.gov.pl\/sprawy-w-trybunale<\/em>\/katalog\/s\/sk-617\/\n Trybuna\u0142","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Sprawy w Trybunale<\/em> \u00bb Katalog Orzeczenia","Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Om\u00f3wienia wybranych orzecze\u0144 od 2000 r. Statystyka Katalog 2018","Publikacje Podstawowe informacje Kontakt Prezes Trybuna\u0142u<\/em> Konstytucyjnego Julia Przy\u0142\u0119bska zosta\u0142a uhonorowana"]}},{"url":"trybunal.gov.pl\/sprawy-w-trybunale\/katalog\/s\/k-3114\/","versions_count":1,"first_seen":{"date":"2018-03-02 03:04:11.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-02 03:04:11.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9448517560958862,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1427","title":"Trybuna\u0142 Konstytucyjny: Bieg terminu przedawnienia zobowi\u0105zania podatkowego","object_id":"1594"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Bieg terminu przedawnienia zobowi\u0105zania podatkowego"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Bieg terminu przedawnienia zobowi\u0105zania podatkowego\ntrybunal.gov.pl\/sprawy-w","pl\/sprawy-w-trybunale<\/em>\/katalog\/s\/k-3114\/\n Trybuna\u0142<\/em> Konstytucyjny: Bieg terminu przedawnienia zobowi\u0105zania podatkowego","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Sprawy w Trybunale<\/em> \u00bb Katalog Orzeczenia","Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Om\u00f3wienia wybranych orzecze\u0144 od 2000 r. Statystyka Katalog 2018"]}},{"url":"trybunal.gov.pl\/sprawy-w-trybunale\/katalog\/s\/k-4116\/","versions_count":1,"first_seen":{"date":"2018-03-02 00:34:45.000000","timezone_type":1,"timezone":"+00:00"},"last_seen":{"date":"2018-03-02 00:34:45.000000","timezone_type":1,"timezone":"+00:00"},"score":0.9448517560958862,"data":{"web_objects_versions":{"image_url":null,"description":null,"id":"1066","title":"Trybuna\u0142 Konstytucyjny: Ustawa o Trybunale Konstytucyjnym","object_id":"1233"}},"highlight":{"data.web_objects_versions.title":["Trybuna\u0142<\/em> Konstytucyjny: Ustawa o Trybunale Konstytucyjnym"],"text":["Trybuna\u0142<\/em> Konstytucyjny: Ustawa o Trybunale<\/em> Konstytucyjnym\ntrybunal.gov.pl\/sprawy-w-trybunale<\/em>\/katalog\/s\/k-4116\/","\/s\/k-4116\/\n Trybuna\u0142<\/em> Konstytucyjny: Ustawa o Trybunale<\/em> Konstytucyjnym Przejd\u017a do g\u0142\u00f3wnej nawigacji Przejd\u017a","Przejd\u017a do tre\u015bci Przejd\u017a do nawigacji w stopce Trybuna\u0142<\/em> Konstytucyjny Adres: 00-918 Warszawa, al. Szucha","Publicznej PL EN FR Trybuna\u0142<\/em> Konstytucyjny Transmisja # Strona g\u0142\u00f3wna \u00bb Sprawy w Trybunale<\/em> \u00bb Katalog Orzeczenia","Orzeczenia TK O Trybunale<\/em> Sprawy w Trybunale<\/em> Om\u00f3wienia wybranych orzecze\u0144 od 2000 r. Statystyka Katalog 2018"]}}]');
+            if ($search_deleted) {
+                $result = array_merge($result, [
+                    'matching_last_seen' => new \DateTime('@'.($b['matching']['last_seen']['value']/1000)),
+                    'not_matching_first_seen' => new \DateTime('@'.($b['not_matching']['first_seen']['value']/1000)),
+                ]);
+            } else {
+                $result = array_merge($result, [
+                    'first_seen' => new \DateTime('@'.($b['first_seen']['value']/1000)),
+                    'last_seen' => new \DateTime('@'.($b['last_seen']['value']/1000)),
+                ]);
+            }
+
+            $results[] = $result;
         }
 
         return $results;

@@ -33,14 +33,34 @@ class WebController extends LaravelController
     public function home(Request $request)
     {
         $textQuery = $request->query('search');
+        $inDeleted = (bool) $request->query('in_deleted', false);
+
         $textResults = [];
         if ($textQuery) {
-            $textResults = $this->repo->searchText($textQuery);
+            $textResults = $this->repo->searchText($textQuery, $inDeleted);
+
+            foreach ($textResults as &$r) {
+                if ($inDeleted) {
+                    $r['link'] = EpfHelpers::route_slashed('diff', [
+                        'url' => $r['url'],
+                        'type' => 'html',
+                        'timestamp_from' => $r['matching_last_seen']->format('YmdHis'),
+                        'timestamp_to' => $r['not_matching_first_seen']->format('YmdHis')
+                    ]);
+
+                } else {
+                    $r['link'] = EpfHelpers::route_slashed('view', [
+                        'url' => $r['url'],
+                        # Linking to when this version was seen last time
+                        'timestamp' => $r['last_seen']->format('YmdHis')]);
+                }
+            }
         }
 
         return view('home', [
             'textResults' => $textResults,
-            'textQuery' => $textQuery
+            'textQuery' => $textQuery,
+            'inDeleted' => $inDeleted
         ]);
     }
 
