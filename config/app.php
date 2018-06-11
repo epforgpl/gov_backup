@@ -225,6 +225,7 @@ $options = [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        'EpfHelpers' => App\Helpers\EpfHelpers::class
     ],
 ];
 

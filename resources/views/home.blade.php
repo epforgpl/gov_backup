@@ -17,7 +17,7 @@
                 <h3>Results</h3>
                 @forelse ($textResults as $r)
                     <div class="result-item text">
-                        <h4><a href="{{ @route('view', [
+                        <h4><a href="{{ @EpfHelpers::route_slashed('view', [
                             'url' => $r['url'],
                             # Linking to when this version was seen last time
                             'timestamp' => $r['last_seen']->format('YmdHis')])
@@ -28,7 +28,7 @@
 
                         <div>Original link: <a href="{{-- TODO full original link needed --}}http://{{ $r['url'] }}">{!! $r['highlight']['data.web_objects_versions.url'][0] or $r['url'] !!}</a></div>
 
-                        <div>Available versions: <a href="{{ @route('calendar', [
+                        <div>Available versions: <a href="{{ @EpfHelpers::route_slashed('calendar', [
                             'url' => $r['url']
                             // ,'govbackup_query' => $textQuery // TODO filter revisions by query
                             ])

@@ -8,7 +8,7 @@
             <li>{{ $r->timestamp->format('Ymd') }}</li>
             <li>{{ $r->object_id }}</li>
             <li>{{ $r->version_id }}</li>
-            <li><a href="{{ route('view', [
+            <li><a href="{{ EpfHelpers::route_slashed('view', [
             'url' => $r->object_url,
             'timestamp' => $r->timestamp->format('YmdHis')]) }}">View</a></li>
         </ul>

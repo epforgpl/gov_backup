@@ -74,14 +74,14 @@ class WebController extends LaravelController
             \Log::debug("Redirecting $url from requested $requestedTimestampString to $actualTimestampString");
 
             // TODO we should inform user about changing the requested timestamp to the closest one we have
-            return redirect(route('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
+            return redirect(EpfHelpers::route_slashed('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
         }
 
         // TODO actual revision timestamp can be different than requested; visualize it
         return view('web/view', [
             'object' => $object,
             'actualTimestamp' => $actualTimestamp,
-            'get_url' => route('get', [
+            'get_url' => EpfHelpers::route_slashed('get', [
                 'url' => $object->getWebUrl(),
                 'timestamp' => self::stringifyTimestamp($actualTimestamp)]) // TODO check
             ]
@@ -132,7 +132,7 @@ class WebController extends LaravelController
             $redirection_url = $object->getRedirectLocation();
 
             if ($object->isRedirectionArchived()) {
-                return redirect(route('view', [
+                return redirect(EpfHelpers::route_slashed('view', [
                     'url' => $redirection_url,
                     'timestamp' => $requestedTimestampString]));
             } else {
@@ -181,7 +181,7 @@ class WebController extends LaravelController
 
                 $route = $type == 'get' ? 'get' : 'view';
 
-                return route($route, [
+                return EpfHelpers::route_slashed($route, [
                     'timestamp' => $timestamp_string,
                     'url' => Reply::unparse_url($parsed_url)],
                     true);
