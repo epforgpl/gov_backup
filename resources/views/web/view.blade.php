@@ -45,6 +45,8 @@
                         <h1>{{ $object->getVersion()->getTitle() }}</h1>
                         <p class="url">{{ $object->getWebUrl() }}</p>
                         <p class="revision">{{ $object->getTimestamp()->format('Y-m-d H:i:s') }}</p>
+
+                        @if (config('app.debug'))<p class="object_id">Object ID: {{ $object->getId() }}</p>@endif
                     </div>
                 </div>
             </div>
