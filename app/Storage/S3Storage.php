@@ -37,11 +37,15 @@ class S3Storage implements iStorage
      * @return null
      * @throws StorageException
      */
-    public function putObject($input, $bucket, $uri, $params = [])
+    public function putObject($input, $bucket, $uri, $contentType = null, $params = [])
     {
         $acl = ( isset($params['ACL']) && ($params['ACL'] == 'public') ) ? \S3::ACL_PUBLIC_READ : \S3::ACL_PRIVATE;
         $meta = isset($params['Meta']) ? $params['Meta'] : [];
+
         $headers = isset($params['Headers']) ? $params['Headers'] : [];
+        if ($contentType !== null) {
+            $headers['Content-Type'] = $contentType; // TODO test it
+        }
 
         try {
             $this->storage->putObject($input, $bucket, $uri, $acl, $meta, $headers);
@@ -74,7 +78,7 @@ class S3Storage implements iStorage
      *
      * @param string $bucket Bucket or container name
      * @param string $uri Object URI
-     * @return bool
+     * @return boolean
      */
     public function deleteObject($bucket, $uri)
     {

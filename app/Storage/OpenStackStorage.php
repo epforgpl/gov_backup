@@ -47,7 +47,7 @@ class OpenStackStorage implements iStorage
         }
     }
 
-    public function putObject($input, $bucket, $uri, $params = [])
+    public function putObject($input, $bucket, $uri, $contentType = null, $params = [])
     {
         $options = [
             'name' => $uri,
@@ -77,6 +77,10 @@ class OpenStackStorage implements iStorage
 
         } else {
             $options['content'] = $input;
+        }
+
+        if ($contentType !== null) {
+            $options['contentType'] = $contentType;
         }
 
         try {
