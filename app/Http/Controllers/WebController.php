@@ -292,13 +292,6 @@ class WebController extends LaravelController
         ]);
     }
 
-    public function thumb($id)
-    {
-        $object = $this->repo->getById($id, true);
-
-        return $object->getVersion()->getBody();
-    }
-
     /**
      * Search for given text
      *

@@ -31,36 +31,6 @@ class WebRepository
         $this->bucket = config('services.storage.bucket');
     }
 
-    // TODO at which timestamp this should be loaded?
-    // TODO is it used? #cleaning
-    public function getById(int $id, $loadContent = false)
-    {
-        $res = $this->ES->search([
-            'index' => 'mojepanstwo_v1',
-            'type' => 'objects',
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['dataset' => 'web_objects']],
-                            ['term' => ['id' => $id]],
-                        ],
-                    ],
-                ],
-                '_source' => ['data.*'],
-            ]
-        ]);
-
-        if(!isset($res['hits']['hits'][0])) {
-            throw new ResourceNotIndexedException("ID = $id");
-        }
-        $this->warnInCaseOfMultipleHits($res);
-
-        $web_object = $this->convertWebObjectResponse($res['hits']['hits'][0], $loadContent);
-
-        return $web_object;
-    }
-
     public static function formatTimestampToISO($timestamp) {
         return date('c', $timestamp);
     }
@@ -156,28 +126,6 @@ class WebRepository
 
         if ($contentView) {
             $this->loadVersionContent($version, $contentView);
-        }
-
-        return $web_object;
-    }
-
-    /**
-     * Process ES response into a nice object
-     *
-     * @param array $hit Response from Elastic Search containing the object
-     * @param bool $loadCurrentVersionContent Whether we should load the content of resulting objects
-     *
-     * @return WebObject Return WebObject
-     */
-    private function convertWebObjectResponse(array $hit, bool $loadCurrentVersionContent)
-    {
-        $web_object = new WebObject($hit['_source']['data']['web_objects']);
-
-        // Loading WebObject we have access to the last revision as well
-        $web_object->setLastSeen(WebRepository::parseESDate($hit['_source']['data']['web_objects_revisions']['timestamp']));
-
-        if ($loadCurrentVersionContent) {
-            $this->loadVersionContent($web_object->getVersion(), 'basic');
         }
 
         return $web_object;
