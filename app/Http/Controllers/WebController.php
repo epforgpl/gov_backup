@@ -121,15 +121,14 @@ class WebController extends LaravelController
     /**
      * Detects streams and treat them accordingly, otherwise streams are converted to memory
      *
-     * @param $version
+     * @param $content String or stream
+     * @param $mediaType Media Type to set in a header
      * @return StreamedResponse
      */
-    protected function maybeStreamResponse(WebObjectVersion $version, $contentType = null) {
-        $content = $version->getBody();
-
+    protected function maybeStreamResponse($content, $mediaType) {
         $headers = [];
-        if ($version->getMediaType()) {
-            $headers['Content-Type'] = $version->getMediaType();
+        if ($mediaType) {
+            $headers['Content-Type'] = $mediaType;
         }
 
         if (! $content instanceof StreamInterface) {
@@ -169,7 +168,7 @@ class WebController extends LaravelController
         try {
             $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp_string);
 
-            $object = $this->repo->get($url, $timestamp, 'basic');
+            $object = $this->repo->get($url, $timestamp);
 
             if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
                 return $maybe_redirect;
@@ -179,9 +178,10 @@ class WebController extends LaravelController
             // - to make sure we use scheme everywhere until https://github.com/epforgpl/gov_backup/issues/79
             $url = $object->getWebUrl();
 
+            $content = $this->repo->loadVersionContent($object->getVersion(), 'basic');
+
             // reply content
             $domains = collect([]);
-            $version = $object->getVersion();
             $rewrite = function(array $parsed_url, string $type) use($url, $timestamp_string, &$domains) {
                 // don't rewrite popular domain outside of our scope
                 // TODO it would be better to have a catalog of all domains scraped,
@@ -207,15 +207,16 @@ class WebController extends LaravelController
                     true);
             };
 
+            $version = $object->getVersion();
             if ($version->getMediaType() == 'text/html') {
-                $version->setBody(Reply::replyHtml($version->getBody(), $url, $rewrite));
+                $content = Reply::replyHtml($content, $url, $rewrite);
 
             } else if ($version->getMediaType() == 'text/css') {
-                $version->setBody(Reply::replyCss($version->getBody(), $url, $rewrite));
+                $content = Reply::replyCss($content, $url, $rewrite);
             }
             // reply content end
 
-            return $this->maybeStreamResponse($object->getVersion());
+            return $this->maybeStreamResponse($content, $version->getMediaType());
 
         } catch (ResourceNotIndexedException $ex) {
             if (EpfHelpers::array_any(['.html', '.htm', '/'], function ($ends_with) use ($url) {
@@ -248,8 +249,8 @@ class WebController extends LaravelController
             $contentView = 'text';
         }
 
-        $fromObject = $this->repo->get($url, $fromTimestamp, $contentView);
-        $toObject = $this->repo->get($url, $toTimestamp, $contentView);
+        $fromObject = $this->repo->get($url, $fromTimestamp);
+        $toObject = $this->repo->get($url, $toTimestamp);
 
         // TODO actual timestamps may be different, do we throw an Exception or inform user and redirect?
 
@@ -269,8 +270,9 @@ class WebController extends LaravelController
         }
         // TODO handle above exceptions on the frontend as well as ContentViewNotFound
 
-        $from = $fromObject->getVersion()->getBody();
-        $to = $toObject->getVersion()->getBody();
+        // load body content
+        $from = $this->repo->loadVersionContent($fromObject->getVersion(), $contentView);
+        $to = $this->repo->loadVersionContent($toObject->getVersion(), $contentView);
 
         if (sha1($from) === sha1($to)) {
             throw new \Exception("Versions are identical");

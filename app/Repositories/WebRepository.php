@@ -44,11 +44,10 @@ class WebRepository
      *
      * @param string $url World-facing url that user is interested in
      * @param \DateTime $requestedTimestamp Timestamp at which resource should be returned. Actual returned revision may differ
-     * @param $contentView Which type of content to load, defaults to null = don't load
      * @return WebObject
      * @throws ResourceNotIndexedException
      */
-    public function get(string $url, \DateTime $requestedTimestamp, $contentView = null): WebObject
+    public function get(string $url, \DateTime $requestedTimestamp): WebObject
     {
         $url = trim($url);
         if( !$url ) {
@@ -124,14 +123,10 @@ class WebRepository
         $web_object->setVersion($version);
         $web_object->setTimestamp(WebRepository::parseESDate($revision['timestamp']));
 
-        if ($contentView) {
-            $this->loadVersionContent($version, $contentView);
-        }
-
         return $web_object;
     }
 
-    public function loadVersionContent(WebObjectVersion &$version, $contentView)
+    public function loadVersionContent(WebObjectVersion $version, $contentView)
     {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
 
@@ -145,8 +140,7 @@ class WebRepository
             // there is no prefix for it
         }
 
-        $response = $this->storage->getObject($this->bucket, $uri);
-        $version->setBody($response);
+        return $this->storage->getObject($this->bucket, $uri);
     }
 
     private function warnInCaseOfMultipleHits($response) {
