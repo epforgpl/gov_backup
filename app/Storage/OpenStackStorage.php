@@ -3,6 +3,7 @@
 namespace App\Storage;
 
 use App\Exceptions\StorageException;
+use OpenStack\ObjectStore\v1\Api;
 use OpenStack\OpenStack;
 use Psr\Http\Message\StreamInterface;
 
@@ -21,6 +22,12 @@ class OpenStackStorage implements iStorage
      */
     private $store;
 
+    /**
+     * Root Url if bucket is public or null otherwise
+     *
+     * @var string
+     */
+    private $publicUrlRoot;
 
     /**
      * OpenStackSwiftStorage constructor.
@@ -38,6 +45,9 @@ class OpenStackStorage implements iStorage
             ]);
 
             $config['identityService'] = \OpenStack\Identity\v2\Service::factory($httpClient);
+        }
+        if (isset($config['publicUrlRoot'])) {
+            $this->publicUrlRoot = $config['publicUrlRoot'] . 'v1/AUTH_' . $config['tenantId'] .'/' ;
         }
 
         try {
@@ -147,5 +157,14 @@ class OpenStackStorage implements iStorage
             // rethrow exception
             throw new StorageException($ex);
         }
+    }
+
+    public function getPublicUrl($bucket, $uri)
+    {
+        if (!$this->publicUrlRoot) {
+            return null;
+        }
+
+        return $this->publicUrlRoot . $bucket . '/' . $uri;
     }
 }

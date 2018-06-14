@@ -4,6 +4,7 @@ namespace App\Storage;
 
 use Psr\Http\Message\StreamInterface;
 
+// TODO this package should be split into a dedicated lib
 interface iStorage
 {
     /**
@@ -38,4 +39,13 @@ interface iStorage
      * @return boolean
      */
     public function deleteObject($bucket, $uri);
+
+    /**
+     * Return URL of publicly available endpoint or null
+     *
+     * @param $bucket Bucket or container name
+     * @param $uri Object URI
+     * @return mixed URL or null if this storage or bucket is not publicly available
+     */
+    public function getPublicUrl($bucket, $uri);
 }

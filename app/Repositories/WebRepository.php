@@ -126,8 +126,7 @@ class WebRepository
         return $web_object;
     }
 
-    public function loadVersionContent(WebObjectVersion $version, $contentView)
-    {
+    private static function cloudKey(WebObjectVersion $version, $contentView) {
         $uri = $version->getObjectId() . '/' . $version->getId() . '/body';
 
         if ($contentView === 'text') {
@@ -140,7 +139,21 @@ class WebRepository
             // there is no prefix for it
         }
 
-        return $this->storage->getObject($this->bucket, $uri);
+        return $uri;
+    }
+
+    public function loadVersionContent(WebObjectVersion $version, $contentView)
+    {
+        return $this->storage->getObject($this->bucket, self::cloudKey($version, $contentView));
+    }
+
+    /**
+     * Return URL of publicly available resource endpoint or null
+     *
+     * @return mixed URL or null if this storage or bucket is not publicly available
+     */
+    public function getPublicUrl(WebObjectVersion $version, $contentView) {
+        return $this->storage->getPublicUrl($this->bucket, self::cloudKey($version, $contentView));
     }
 
     private function warnInCaseOfMultipleHits($response) {

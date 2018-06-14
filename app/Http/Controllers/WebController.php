@@ -169,9 +169,19 @@ class WebController extends LaravelController
             $timestamp = \DateTime::createFromFormat('YmdHis', $timestamp_string);
 
             $object = $this->repo->get($url, $timestamp);
+            $version = $object->getVersion();
 
+            // redirect if originally it was a redirect
             if ($maybe_redirect = self::handleRedirect($object, $timestamp)) {
                 return $maybe_redirect;
+            }
+
+            // redirect to save content from the cloud; no reason to be an intermediary if we are not changing content
+            if ($version->getMediaType() != 'text/html' and $version->getMediaType() != 'text/css') {
+
+                if ($publicUrl = $this->repo->getPublicUrl($version, 'basic')) {
+                    return redirect($publicUrl);
+                }
             }
 
             // Make sure it's original link

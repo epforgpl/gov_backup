@@ -84,4 +84,16 @@ class S3Storage implements iStorage
     {
         throw new \Exception("Implement deleteObject() method."); // TODO
     }
+
+    /**
+     * Return URL for publicly available endpoint or null
+     *
+     * @param $bucket Bucket or container name
+     * @param $uri Object URI
+     * @return mixed URL or null if this storage or bucket is not publicly available
+     */
+    public function getPublicUrl($bucket, $uri)
+    {
+        throw new \Exception("getPublicUrl method not implemented."); // TODO
+    }
 }
