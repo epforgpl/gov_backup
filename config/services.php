@@ -26,6 +26,7 @@ return [
             'password' => env('OPENSTACK_PASSWORD'),
             'tenantId' => env('OPENSTACK_TENANT_ID'),
             'authUrl'  => env('OPENSTACK_AUTH_URL', 'https://auth.cloud.ovh.net/v2.0'),
+            'publicUrlRoot' => env('OPENSTACK_PUBLIC_URL_ROOT', 'https://storage.waw1.cloud.ovh.net/'),
             'region'   => env('OPENSTACK_REGION', 'WAW1'),
             'keystoneAuth' => env('OPENSTACK_KEYSTONE_AUTH', 'v2'),
         ],
