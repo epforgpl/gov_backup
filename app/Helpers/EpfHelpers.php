@@ -25,4 +25,17 @@ class EpfHelpers {
         $parameters['url'] = 'SAVE_TRAILING_SLASH';
         return str_replace('SAVE_TRAILING_SLASH', $url , route($name, $parameters, $absolute));
     }
+
+    /**
+     * Strip lines that start with //
+     */
+    public static function strip_json_comments(string $text) {
+        $result = [];
+        foreach(mb_split("\n", $text) as $line) {
+            if (!starts_with(trim($line), '//')) {
+                array_push($result, $line);
+            }
+        }
+        return join("\n", $result);
+    }
 }

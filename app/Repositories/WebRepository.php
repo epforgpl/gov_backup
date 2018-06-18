@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Exceptions\ContentViewNotFound;
 use App\Exceptions\ResourceNotIndexedException;
+use App\Helpers\EpfHelpers;
 use App\Helpers\Reply;
 use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
@@ -239,21 +240,29 @@ class WebRepository
 
         $request = <<<JSON
 {
+  // don't return any hits, we get all the data from aggregations
   "size": 0,
   "query": {
     "bool": {
       "filter": {
         "term": {
+          // content is stored in versions, that what we search
           "dataset": "web_objects_versions"
         }
       },
+      // if we search for deleted phases, then we want to get also the versions that don't match, so minimum_should_match = 0
+      // anyhow we need should in this search because it prioritizes verisons/objects that have contained the version
+      // otherwise they might not be returned in the aggregation buckets
       "minimum_should_match": $minimum_should_match,
       "should": [
         {
           "multi_match": {
+            // cross_fields looks for each word in any field, https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
             "type": "cross_fields",
             "query": $query,
             "fields": [
+              // we search separately in title, url, and text to be able to highlight it separately
+              // and possibly also boost results from one of the fields
               "data.web_objects_versions.title",
               "data.web_objects_versions.url",
               "text"
@@ -265,17 +274,21 @@ class WebRepository
   },
   "aggs": {
     "top-urls": {
+      // we are dividing all versions into buckets, one objects/resource in each bucket 
       "terms": {
         "field": "data.web_objects_versions.url.keyword",
         "size": 10,
         "order": {
+          // order is affected by `should` query above
           "top_hit": "desc"
         }
       },
+      // comment
       "aggs": {
         "top_hits": {
           "top_hits": {
             "_source": {
+              // get just the data we need
               "includes": [
                 "data.web_objects_versions.id",
                 "data.web_objects_versions.object_id",
@@ -284,6 +297,7 @@ class WebRepository
                 "data.web_objects_versions.image_url"
               ]
             },
+            // we want to highlight results in this field separately because in the frontend they are separated
             "highlight": {
               "fields": {
                 "data.web_objects_versions.title": {
@@ -297,6 +311,7 @@ class WebRepository
                 }
               }
             },
+            // in each bucket(object/resource) best-matching versions will be enough
             "size": 1
           }
         },
@@ -311,6 +326,7 @@ class WebRepository
 JSON;
         if ($search_deleted) {
             $request .= <<<JSON
+        // we get last matching version (the word was present)
         "matching": {
           "filter": { 
             "match": {
@@ -319,6 +335,7 @@ JSON;
           },
           "aggs": { "last_seen": { "max": { "field": "data.web_objects_versions.last_seen_date" }}}
         },
+        // we get the first non-matching version (the word disappeared)
         "not_matching": {
           "filter" : { 
               "bool": {
@@ -331,19 +348,23 @@ JSON;
           },
           "aggs": { "first_seen": { "min": { "field": "data.web_objects_versions.first_seen_date" }}}
         },
-        "deleted phrases: objects with last_not_matching after last matching": {
+        // show only deleted phrases 
+        // we are filtering (bucket_selector) only those versions that had a non-matching version after matching
+        "deleted phrases": {
             "bucket_selector": {
                 "buckets_path": {
-                  "last_not_matching_date": "not_matching.first_seen",
+                  "first_not_matching_date": "not_matching.first_seen",
                   "last_matching_date": "matching.last_seen"
                 },
-                "script": "params.last_not_matching_date > params.last_matching_date"
+                "script": "params.first_not_matching_date > params.last_matching_date"
             }
         }
 JSON;
         } else {
-            // get best matching version first and last seen dates (TODO it should be max & min really)
+            // get best matching version first and last seen dates (TODO it should be max & min really across all versions)
             $request .= <<<JSON
+        // some informative data for the frontend
+        // if the url was scraped multiple times: when we've seen this version the first time and when the last time
         "first_seen": {
                 "min": {
                     "script": {
@@ -369,6 +390,8 @@ JSON;
   }
 }
 JSON;
+
+        $request = EpfHelpers::strip_json_comments($request);
 
         $response = $this->ES->search([
             'index' => 'mojepanstwo_v1',
