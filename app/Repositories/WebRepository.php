@@ -55,11 +55,6 @@ class WebRepository
             throw new \InvalidArgumentException('URL is not set');
         }
 
-        // if there is no schema, guess it for now TODO fix it properly https://github.com/epforgpl/gov_backup/issues/79
-        if (stripos($url, '//') === false) {
-            $url = 'http://' . $url;
-        }
-
         $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
         $filterRevisions = self::filterRevisionsRequestPart($urlp);
@@ -426,6 +421,7 @@ JSON;
     }
 
     private static function filterRevisionsRequestPart($urlp) {
+        $scheme = json_encode($urlp['scheme']);
         $host = json_encode($urlp['host']);
         $path = json_encode($urlp['path']);
         $query = json_encode($urlp['query']);
@@ -433,6 +429,7 @@ JSON;
         return <<<JSON
             "filter": [
                 { "term": { "dataset": "web_objects_revisions" }},
+                { "term": { "data.web_objects.scheme": $scheme }},
                 { "term": { "data.web_objects.host": $host }},
                 { "term": { "data.web_objects.path": $path }},
                 { "term": { "data.web_objects.query": $query }}

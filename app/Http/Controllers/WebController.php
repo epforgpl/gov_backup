@@ -184,10 +184,12 @@ class WebController extends LaravelController
                 }
             }
 
-            // Make sure it's original link
-            // - to make sure we use scheme everywhere until https://github.com/epforgpl/gov_backup/issues/79
-            $url = $object->getWebUrl();
-
+            // Make sure it's original link; this should not be the issue, but better be safe
+            if ($object->getWebUrl() != $url) {
+                app('log')->warning("Matched and returned URL differ: $url <> " . $object->getWebUrl());
+                $url = $object->getWebUrl();
+            }
+            
             $content = $this->repo->loadVersionContent($object->getVersion(), 'basic');
 
             // reply content
