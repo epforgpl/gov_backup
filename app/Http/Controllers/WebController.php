@@ -84,6 +84,12 @@ class WebController extends LaravelController
             return $maybe_redirect;
         }
 
+        // Make sure it's original link; this should not be the issue, but better be safe
+        if ($object->getWebUrl() != $url) {
+            app('log')->warning("Matched and returned URL differ: $url <> " . $object->getWebUrl());
+            $url = $object->getWebUrl();
+        }
+
         $actualTimestamp = $requestedTimestamp;
         if ($requestedTimestamp != $object->getTimestamp()) {
             // we have another version at different moment that was requested
@@ -102,7 +108,7 @@ class WebController extends LaravelController
             'object' => $object,
             'actualTimestamp' => $actualTimestamp,
             'get_url' => EpfHelpers::route_slashed('get', [
-                'url' => $object->getWebUrl(),
+                'url' => $url,
                 'timestamp' => self::stringifyTimestamp($actualTimestamp)]) // TODO check
             ]
         );

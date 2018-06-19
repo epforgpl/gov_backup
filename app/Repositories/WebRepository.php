@@ -423,6 +423,7 @@ JSON;
     private static function filterRevisionsRequestPart($urlp) {
         $scheme = json_encode($urlp['scheme']);
         $host = json_encode($urlp['host']);
+        $port = json_encode($urlp['port']);
         $path = json_encode($urlp['path']);
         $query = json_encode($urlp['query']);
 
@@ -431,6 +432,7 @@ JSON;
                 { "term": { "dataset": "web_objects_revisions" }},
                 { "term": { "data.web_objects.scheme": $scheme }},
                 { "term": { "data.web_objects.host": $host }},
+                { "term": { "data.web_objects.port": $port }},
                 { "term": { "data.web_objects.path": $path }},
                 { "term": { "data.web_objects.query": $query }}
             ]
