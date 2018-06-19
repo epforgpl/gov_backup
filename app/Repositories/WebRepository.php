@@ -172,6 +172,8 @@ JSON;
     }
 
     /**
+     * Return all revisions (moments visited) for a given object/URL
+     *
      * @param $url
      * @return UrlRevision[]
      */
@@ -187,37 +189,16 @@ JSON;
         $path = json_encode($urlp['path']);
         $query = json_encode($urlp['query']);
 
+        // that's quite a self-explanatory query
         $request = <<<JSON
 {
     "query": {
         "bool": {
             "must": [
-                {
-                    "term": {
-                        "dataset": "web_objects_revisions"
-                    }
-                },
-                {
-                    "term": {
-                        "data.web_objects.host": $host
-                    }
-                },
-                {
-                    "bool": {
-                        "should": [
-                            {
-                                "term": {
-                                    "data.web_objects.path": $path
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "term": {
-                        "data.web_objects.query": $query
-                    }
-                }
+                { "term": { "dataset": "web_objects_revisions" }},
+                { "term": { "data.web_objects.host": $host }},
+                { "term": { "data.web_objects.path": $path }},
+                { "term": { "data.web_objects.query": $query }}
             ]
         }
     },
