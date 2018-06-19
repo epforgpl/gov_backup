@@ -185,7 +185,6 @@ JSON;
 
         $host = json_encode($urlp['host']);
         $path = json_encode($urlp['path']);
-        $path_trailing_slash = json_encode($urlp['path'] . '/');
         $query = json_encode($urlp['query']);
 
         $request = <<<JSON
@@ -209,11 +208,6 @@ JSON;
                             {
                                 "term": {
                                     "data.web_objects.path": $path
-                                }
-                            },
-                            {
-                                "term": {
-                                    "data.web_objects.path": $path_trailing_slash
                                 }
                             }
                         ]
