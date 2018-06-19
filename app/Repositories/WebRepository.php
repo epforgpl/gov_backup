@@ -68,28 +68,24 @@ class WebRepository
         $requestedTimestampString = json_encode($requestedTimestamp->format('c'));
 
         // search for the closest revision
-        $search_request = <<<JSON
+        $request = <<<JSON
 {
+    // return revision with the closest date to requested
     "size": 1,
     "query": {
         "function_score": {
             "query": {
                 "bool": {
                     "filter": [
-                        { "term": { "dataset": "web_objects_revisions" } },
-                        { "term": { "data.web_objects.host": $host } },
-                        { "bool": {
-                                "should": [
-                                    { "term": { "data.web_objects.path": $path } }
-                                ]
-                            }
-                        },
-                        { "term": { "data.web_objects.query": $query } }
+                        { "term": { "dataset": "web_objects_revisions" }},
+                        { "term": { "data.web_objects.host": $host }},
+                        { "term": { "data.web_objects.path": $path }},
+                        { "term": { "data.web_objects.query": $query }}
                     ]
                 }
             },
+            // sort revisions to get one closest to requested timestamp 
             "exp": {
-                // return revision with the closest date to requested
                 "data.web_objects_revisions.timestamp": {
                     "origin": $requestedTimestampString,
                     "scale": "1d"
@@ -107,12 +103,12 @@ JSON;
         $res = $this->ES->search([
             'index' => 'mojepanstwo_v1',
             'type' => 'objects',
-            'body' => $search_request
+            'body' => EpfHelpers::strip_json_comments($request)
         ]);
 
         if(!isset($res['hits']['hits'][0])) {
             throw new ResourceNotIndexedException("$url at " . $requestedTimestamp->format('c')
-            . "\nQuery: " . json_encode($search_request['body']));
+            . "\nQuery: " . $request);
         }
 
         $hit = $res['hits']['hits'][0];
@@ -194,7 +190,7 @@ JSON;
 {
     "query": {
         "bool": {
-            "must": [
+            "filter": [
                 { "term": { "dataset": "web_objects_revisions" }},
                 { "term": { "data.web_objects.host": $host }},
                 { "term": { "data.web_objects.path": $path }},
@@ -212,7 +208,7 @@ JSON;
         $res = $this->ES->search([
             'index' => 'mojepanstwo_v1',
             'type' => 'objects',
-            'body' => $request
+            'body' => EpfHelpers::strip_json_comments($request)
         ]);
 
         $results = [];
