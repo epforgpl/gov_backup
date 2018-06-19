@@ -94,6 +94,7 @@ class S3Storage implements iStorage
      */
     public function getPublicUrl($bucket, $uri)
     {
-        throw new \Exception("getPublicUrl method not implemented."); // TODO
+        // TODO getPublicUrl method not implemented
+        return null;
     }
 }
