@@ -62,9 +62,7 @@ class WebRepository
 
         $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
-        $host = json_encode($urlp['host']);
-        $path = json_encode($urlp['path']);
-        $query = json_encode($urlp['query']);
+        $filterRevisions = self::filterRevisionsRequestPart($urlp);
         $requestedTimestampString = json_encode($requestedTimestamp->format('c'));
 
         // search for the closest revision
@@ -76,12 +74,7 @@ class WebRepository
         "function_score": {
             "query": {
                 "bool": {
-                    "filter": [
-                        { "term": { "dataset": "web_objects_revisions" }},
-                        { "term": { "data.web_objects.host": $host }},
-                        { "term": { "data.web_objects.path": $path }},
-                        { "term": { "data.web_objects.query": $query }}
-                    ]
+                    $filterRevisions
                 }
             },
             // sort revisions to get one closest to requested timestamp 
@@ -180,22 +173,14 @@ JSON;
         }
 
         $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
-
-        $host = json_encode($urlp['host']);
-        $path = json_encode($urlp['path']);
-        $query = json_encode($urlp['query']);
+        $filterRevisions = self::filterRevisionsRequestPart($urlp);
 
         // that's quite a self-explanatory query
         $request = <<<JSON
 {
     "query": {
         "bool": {
-            "filter": [
-                { "term": { "dataset": "web_objects_revisions" }},
-                { "term": { "data.web_objects.host": $host }},
-                { "term": { "data.web_objects.path": $path }},
-                { "term": { "data.web_objects.query": $query }}
-            ]
+            $filterRevisions
         }
     },
     "_source": [
@@ -438,5 +423,20 @@ JSON;
         }
 
         return $results;
+    }
+
+    private static function filterRevisionsRequestPart($urlp) {
+        $host = json_encode($urlp['host']);
+        $path = json_encode($urlp['path']);
+        $query = json_encode($urlp['query']);
+
+        return <<<JSON
+            "filter": [
+                { "term": { "dataset": "web_objects_revisions" }},
+                { "term": { "data.web_objects.host": $host }},
+                { "term": { "data.web_objects.path": $path }},
+                { "term": { "data.web_objects.query": $query }}
+            ]
+JSON;
     }
 }
