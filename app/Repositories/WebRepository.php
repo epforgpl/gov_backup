@@ -62,43 +62,53 @@ class WebRepository
 
         $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
-        $object_conditions = [
-            ['term' => ['dataset' => 'web_objects_revisions']],
-            ['term' => ['data.web_objects.host' => $urlp['host']]],
-            ['bool' => [
-                'should' => [
-                    ['term' => ['data.web_objects.path' => $urlp['path']]]
-                ]
-            ]],
-            ['term' => ['data.web_objects.query' => $urlp['query']]]
-        ];
+        $host = json_encode($urlp['host']);
+        $path = json_encode($urlp['path']);
+        $query = json_encode($urlp['query']);
+        $requestedTimestampString = json_encode($requestedTimestamp->format('c'));
 
         // search for the closest revision
-        $search_request = [
+        $search_request = <<<JSON
+{
+    "size": 1,
+    "query": {
+        "function_score": {
+            "query": {
+                "bool": {
+                    "filter": [
+                        { "term": { "dataset": "web_objects_revisions" } },
+                        { "term": { "data.web_objects.host": $host } },
+                        { "bool": {
+                                "should": [
+                                    { "term": { "data.web_objects.path": $path } }
+                                ]
+                            }
+                        },
+                        { "term": { "data.web_objects.query": $query } }
+                    ]
+                }
+            },
+            "exp": {
+                // return revision with the closest date to requested
+                "data.web_objects_revisions.timestamp": {
+                    "origin": $requestedTimestampString,
+                    "scale": "1d"
+                }
+            },
+            "boost_mode": "max"
+        }
+    },
+    "_source": [
+        "data.*"
+    ]
+}
+JSON;
+
+        $res = $this->ES->search([
             'index' => 'mojepanstwo_v1',
             'type' => 'objects',
-            'body' => [
-                'size' => 1,
-                'query' => [
-                    'function_score' => [
-                        'query' => [
-                            'bool' => [
-                                'filter' => $object_conditions,
-                            ],
-                        ],
-                        'exp' => [ // return revision with the closest date to requested
-                            "data.web_objects_revisions.timestamp" => [
-                                "origin" => $requestedTimestamp->format('c'),
-                                "scale" => "1d"
-                            ],
-                        ],
-                        "boost_mode" => "max"
-                    ]
-                ],
-                '_source' => ['data.*'],
-            ]
-        ];
-        $res = $this->ES->search($search_request);
+            'body' => $search_request
+        ]);
 
         if(!isset($res['hits']['hits'][0])) {
             throw new ResourceNotIndexedException("$url at " . $requestedTimestamp->format('c')
@@ -173,29 +183,61 @@ class WebRepository
 
         $urlp = Reply::createAbsoluteStandardizedUrl($url, $url, true);
 
-        $must = [
-            ['term' => ['dataset' => 'web_objects_revisions']],
-            ['term' => ['data.web_objects.host' => $urlp['host']]],
-            ['bool' => [
-                'should' => [
-                    ['term' => ['data.web_objects.path' => $urlp['path']]],
-                    ['term' => ['data.web_objects.path' => $urlp['path'] . '/']]
-                ]
-            ]],
-            ['term' => ['data.web_objects.query' => $urlp['query']]]
-        ];
+        $host = json_encode($urlp['host']);
+        $path = json_encode($urlp['path']);
+        $path_trailing_slash = json_encode($urlp['path'] . '/');
+        $query = json_encode($urlp['query']);
+
+        $request = <<<JSON
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "dataset": "web_objects_revisions"
+                    }
+                },
+                {
+                    "term": {
+                        "data.web_objects.host": $host
+                    }
+                },
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "term": {
+                                    "data.web_objects.path": $path
+                                }
+                            },
+                            {
+                                "term": {
+                                    "data.web_objects.path": $path_trailing_slash
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "term": {
+                        "data.web_objects.query": $query
+                    }
+                }
+            ]
+        }
+    },
+    "_source": [
+        "data.web_objects_revisions.*",
+        "data.web_objects.url"
+    ]
+}
+JSON;
 
         $res = $this->ES->search([
             'index' => 'mojepanstwo_v1',
             'type' => 'objects',
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                    ],
-                ],
-                '_source' => ['data.web_objects_revisions.*', 'data.web_objects.url'],
-            ]
+            'body' => $request
         ]);
 
         $results = [];
