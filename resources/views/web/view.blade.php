@@ -37,9 +37,13 @@
             <div class="container-fluid">
                 <div class="web_object_header">
                     <div class="image">
+                        TODO thumbUrl
+                        {{--
+                        TODO We store only getImageObjectId(), if existing, thumb_url should be computed in controller
                         @if ($object->getVersion()->getThumbUrl())
                             <img src="{{ $object->getVersion()->getThumbUrl() }}" />
                         @endif
+                         --}}
                     </div>
                     <div class="content">
                         <h1>{{ $object->getVersion()->getTitle() }}</h1>

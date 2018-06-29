@@ -6,7 +6,7 @@ class WebObjectVersion
 {
 
     private $id, $body_hash, $portal_revision_id, $media_type, $body, $header, $body_processed, $has_body_text, $keywords,
-        $image_url, $description, $title, $http_code, $locale, $content_length_bytes, $size_bytes, $timestamp, $object_id;
+        $image_object_id, $description, $title, $http_code, $locale, $content_length_bytes, $size_bytes, $timestamp, $object_id;
 
     /**
      * Map version of the WebObject
@@ -17,12 +17,12 @@ class WebObjectVersion
     public function __construct(array $data, $object_id)
     {
         $this->title = $data['title'];
-        $this->image_url = $data['image_url'];
         $this->id = (int) $data['id'];
         $this->body_processed = (boolean) $data['body_transformed'];
         $this->has_body_text = isset($data['has_body_text']) ? $data['has_body_text'] : false;
         $this->object_id = $object_id;
         $this->media_type = $data['media_type'];
+        $this->image_object_id = $data['image_object_id'];
 
         // other available fields
 
@@ -103,9 +103,9 @@ class WebObjectVersion
         return $this->keywords;
     }
 
-    public function getThumbUrl()
+    public function getImageObjectId()
     {
-        return $this->image_url;
+        return $this->image_object_id;
     }
 
     /**
@@ -122,14 +122,6 @@ class WebObjectVersion
     public function getMediaType()
     {
         return $this->media_type;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getImageUrl()
-    {
-        return $this->image_url;
     }
 
     /**

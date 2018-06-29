@@ -323,8 +323,7 @@ JSON;
                 "data.web_objects_versions.id",
                 "data.web_objects_versions.object_id",
                 "data.web_objects_versions.title",
-                "data.web_objects_versions.description",
-                "data.web_objects_versions.image_url"
+                "data.web_objects_versions.description"
               ]
             },
             // we want to highlight results in this field separately because in the frontend they are separated

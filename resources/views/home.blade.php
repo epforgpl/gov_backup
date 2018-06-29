@@ -42,7 +42,7 @@
                         <div>This version last seen: {{ $r['last_seen']->format('Y-m-d H:i') }}</div>
                         @endif
 
-                        {{-- TODO image_id now stores thumbnail (if available)
+                        {{-- TODO image_id now stores thumbnail (if available), not image_url
                         @if ($r['data']['web_objects_versions']['image_id'] ?? null)
                             <img src="{{ $r['data']['web_objects_versions']['image_url'] }}"/>
                         @endif
