@@ -201,19 +201,10 @@ class WebController extends LaravelController
             // reply content
             $domains = collect([]);
             $rewrite = function(array $parsed_url, string $type) use($url, $timestamp_string, &$domains) {
-                // don't rewrite popular domain outside of our scope
-                // TODO it would be better to have a catalog of all domains scraped,
-                // but we would have to cache it for efficiency https://github.com/epforgpl/gov_backup/issues/73
-                if (in_array($parsed_url['host'], [
-                    'fonts.googleapis.com', 'fonts.gstatic.com', 'www.google.com', 'ajax.googleapis.com',
-                    'googleads.g.doubleclick.net', 'ssl.google-analytics.com',
-                    'i.timg.com',
-                    'abs.twimg.com', 'pbs.twimg.com', // i wiele więcej subdomen
-                    'platform.twitter.com', 'syndication.twitter.com',
-                    'connect.facebook.net', 'static.ak.fbcdn.net', 'staticxx.facebook.com',
-                    'static.doubleclick.net',
-                    'www.youtube.com'
-                ])) {
+                $archivedDomains = $this->repo->getArchivedDomains();
+
+                // don't rewrite links to domains outside of our scope
+                if (!in_array($parsed_url['host'], $archivedDomains)) {
                     return null;
                 }
 

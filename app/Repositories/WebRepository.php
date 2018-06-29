@@ -10,6 +10,7 @@ use App\Models\WebObjectRedirect;
 use App\Models\WebObjectVersion;
 use App\Storage\iStorage;
 use App\Models\WebObject;
+use Illuminate\Support\Facades\Cache;
 
 class WebRepository
 {
@@ -153,6 +154,42 @@ JSON;
 
     private function warnInCaseOfMultipleHits($response) {
         // TODO handle multiple hits -> log to warnings
+    }
+
+    public function getArchivedDomains($cache = true) {
+        $domains = Cache::get('archivedDomains');
+        if ($domains == null) {
+            $request = <<<JSON
+{
+  // don't return any hits, we get all the data from aggregations
+  "size": 0,
+  "query": {
+    "bool": { "filter": { "term": { "dataset": "web_objects" } } }
+  },
+  "aggs": {
+    "hosts": {
+      "terms": { "field": "data.web_objects.host" }
+    }
+  }
+}
+JSON;
+
+            $request = EpfHelpers::strip_json_comments($request);
+            $response = $this->ES->search([
+                'index' => 'mojepanstwo_v1',
+                'type' => 'objects',
+                'body' => $request
+            ]);
+
+            $domains = [];
+            foreach ($response['aggregations']['hosts']['buckets'] as $b) {
+                array_push($domains, $b['key']);
+            }
+
+            Cache::set('archivedDomains', $domains, \DateInterval::createFromDateString("4 hours"));
+        }
+
+        return $domains;
     }
 
     /**
