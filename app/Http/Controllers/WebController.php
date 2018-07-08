@@ -205,6 +205,17 @@ class WebController extends LaravelController
 
                 // don't rewrite links to domains outside of our scope
                 if (!in_array($parsed_url['host'], $archivedDomains)) {
+                    if ($parsed_url['scheme'] == 'http') {
+                        // TODO hack before allowing both http and https https://gitlab.edge.do/epf/govbackup/issues/5 is implemented
+                        // problem: http website wants to download external content on http
+                        // because archiwum.io is served on https it will fail
+                        // we are hacking it here hoping https will served by external party
+
+                        $parsed_url['scheme'] == 'https';
+
+                        return Reply::unparse_url($parsed_url);
+                    }
+
                     return null;
                 }
 
