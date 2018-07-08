@@ -1,0 +1,25 @@
+#greeting {
+  text-align: center;
+  margin-top: 2rem;
+  img {
+    width: 10rem;
+  }
+  form {
+    .input-main {
+      box-shadow: 0 0 30px #dae1e9;
+    }
+    label {
+      font-size: .9rem;
+    }
+  }
+}
+
+.result-items {
+  .result-item {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #DDD;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
