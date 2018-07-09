@@ -29,14 +29,17 @@ class AppServiceProvider extends ServiceProvider
     {
         // Provides a client talking to an OpenStack's Object Storage compatible service storing files.
         $this->app->singleton(iStorage::class, function() {
-            $storage_type = config('services.storage.type');
-            $options = config('services.storage.options');
+            $storage_profile = config('services.storage.default');
+
+            $profile = config('services.storage.' . $storage_profile);
+            $storage_type = $profile['type'];
+            unset($profile['type']);
 
             if ($storage_type == 'openstack') {
-                return new OpenStackStorage($options);
+                return new OpenStackStorage($profile);
 
             } else if ($storage_type == 's3') {
-                return new S3Storage($options);
+                return new S3Storage($profile);
 
             } else {
                 throw new \InvalidArgumentException("Unknown storage type: $storage_type");

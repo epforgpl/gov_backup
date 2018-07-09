@@ -20,8 +20,10 @@ return [
 
     'storage' => [
         'bucket' => 'govbackup-public',
-        'type' => 'openstack',
-        'options' => [
+        'default' => env('STORAGE_PROFILE', 'openstack-ovh'),
+
+        'openstack-ovh' => [
+            'type' => 'openstack',
             'username' => env('OPENSTACK_USERNAME'),
             'password' => env('OPENSTACK_PASSWORD'),
             'tenantId' => env('OPENSTACK_TENANT_ID'),
@@ -30,11 +32,12 @@ return [
             'region'   => env('OPENSTACK_REGION', 'WAW1'),
             'keystoneAuth' => env('OPENSTACK_KEYSTONE_AUTH', 'v2'),
         ],
-//        'type' => 's3',
-//        'options' => [
-//            'endpoint' => env('S3_ENDPOINT'),
-//            'accessKey' => env('S3_ACCESS_KEY'),
-//            'secretKey' => env('S3_SECRET_KEY'),
-//        ]
+
+        's3' => [
+            'type' => 's3',
+            'endpoint' => env('S3_ENDPOINT'),
+            'accessKey' => env('S3_ACCESS_KEY'),
+            'secretKey' => env('S3_SECRET_KEY'),
+        ]
     ],
 ];
