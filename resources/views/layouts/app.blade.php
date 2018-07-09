@@ -2,11 +2,26 @@
 
 @section('body')
 <div id="app">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}">
-                {{ config('app.name', 'Laravel') }}
+    <nav id="nav-main" class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" title="{{ config('app.name', 'Laravel') }}" href="{{ url('/') }}">
+                <img src="{{ asset('img/logo.svg') }}" />
             </a>
+
+            @if (isset($object))
+            <div class="page-header">
+                <div class="result-item">
+                    <p class="title">
+                        <a href="{{ $object->getWebUrl() }}">{{ $object->getVersion()->getTitle() }}</a>
+                    </p>
+                    <p class="link">
+                        <a href="{{ $object->getWebUrl() }}" target="_blank">{{ $object->getWebUrl() }}</a>
+                    </p>
+                    <p class="revision">Wersja z {{ $object->getTimestamp()->format('Y-m-d H:i:s') }}</p>
+                </div>
+            </div>
+            @endif
+
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -15,8 +30,8 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
                 <ul class="navbar-nav">
                     @if (Auth::guest())
-                        <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Login</a></li>
-                        <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li>
+                        <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Zaloguj</a></li>
+                        <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Zarejestruj się</a></li>
                     @else
                         <li class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" data-toggle="dropdown"

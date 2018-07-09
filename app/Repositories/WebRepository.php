@@ -336,7 +336,7 @@ JSON;
                     "number_of_fragments" : 1
                 },
                 "text": {
-                    "number_of_fragments" : 5
+                    "number_of_fragments" : 1
                 }
               }
             },

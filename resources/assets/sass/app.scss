@@ -2,72 +2,84 @@
 @import url("https://fonts.googleapis.com/css?family=Raleway:300,400,600");
 
 // Variables
-@import "variables";
+@import "node_modules/bootswatch/dist/cerulean/variables";
 
 // Bootstrap
-@import "~bootstrap/scss/bootstrap";
+@import "node_modules/bootstrap/scss/bootstrap";
+@import "node_modules/bootswatch/dist/cerulean/bootswatch";
 
-#page {
-  height: 100vh;
-  width: 100%;
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  color: #444;
 }
 
-#header {
-  height: 160px;
-  width: 100%;
-  background-color: #EEE;
-  position: absolute;
-  .navbar {
-    padding-left: 0;
-    padding-right: 0;
+body {
+  padding-top: 60px;
+}
+
+a {
+  text-decoration: none !important;
+  color: #1A79B0;
+}
+
+#nav-main {
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: .9rem;
+  height: 75px;
+  overflow: hidden;
+  .navbar-brand {
+    img {
+      height: 60px;
+    }
   }
 }
 
-#content {
+#web_iframe {
   width: 100%;
-  height: 100vh;
-  padding-top: 200px;
-}
-
-#web_object_header {
-  height: 105px;
-  background-color: #EEE;
-}
-
-#iframe {
-  width: 100%;
-  height: 100%;
+  height: calc(100vh - 75px);
   margin: 0;
   padding: 0;
   border: none;
 }
 
-.web_object_header {
+.result-item {
+  font-size: 0.9rem;
   p {
     margin: 0;
     padding: 0;
-    &.url {
+  }
+
+  .title {
+    font-size: 1.1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    a {
+
+    }
+  }
+
+  .link {
+    font-size: 0.8rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    a {
       color: green;
     }
   }
-  .image {
-    width: 170px;
-    float: left;
-    img {
-      max-width: 150px;
-      max-height: 100px;
+
+  .revision {
+    color: #666;
+    font-size: 0.8rem;
+    margin-top: 0.1rem;
+    font-weight: 600;
+  }
+
+  .highlights {
+    font-size: 0.8rem;
+    > div {
+      padding: 0.2rem 0;
     }
   }
-  .content {
-    margin-left: 170px;
-  }
-}
-
-em {
-  font-style: normal;
-  font-weight: bold;
-}
-
-.result-item {
-  margin-top: 35px;
 }
