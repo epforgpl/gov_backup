@@ -103,6 +103,12 @@ class WebController extends LaravelController
             return redirect(EpfHelpers::route_slashed('view', ['url' => $url, 'timestamp' => $actualTimestampString]));
         }
 
+        if ($this->request->secure() && starts_with($url, 'http:')) {
+            // Original content was not secure so we have to serve non-secure html
+            //    to make sure it will load all external content
+            return redirect()->to($this->request->getRequestUri(), 302, [], false);
+        }
+
         // TODO actual revision timestamp can be different than requested; visualize it
         return view('web/view', [
             'object' => $object,
@@ -195,7 +201,7 @@ class WebController extends LaravelController
                 app('log')->warning("Matched and returned URL differ: $url <> " . $object->getWebUrl());
                 $url = $object->getWebUrl();
             }
-            
+
             $content = $this->repo->loadVersionContent($object->getVersion(), 'basic');
 
             // reply content
@@ -205,17 +211,6 @@ class WebController extends LaravelController
 
                 // don't rewrite links to domains outside of our scope
                 if (!in_array($parsed_url['host'], $archivedDomains)) {
-                    if ($parsed_url['scheme'] == 'http') {
-                        // TODO hack before allowing both http and https https://gitlab.edge.do/epf/govbackup/issues/5 is implemented
-                        // problem: http website wants to download external content on http
-                        // because archiwum.io is served on https it will fail
-                        // we are hacking it here hoping https will served by external party
-
-                        $parsed_url['scheme'] == 'https';
-
-                        return Reply::unparse_url($parsed_url);
-                    }
-
                     return null;
                 }
 
