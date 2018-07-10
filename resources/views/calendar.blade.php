@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Lista wersji dla ' . $url . ' | Archiwum.io')
+
 @section('content')
 
     @forelse ($revisions as $r)
@@ -15,6 +17,5 @@
     @empty
         <div>No results!</div>
     @endforelse
-    </ul>
 
 @endsection

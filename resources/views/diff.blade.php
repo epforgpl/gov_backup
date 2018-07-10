@@ -1,5 +1,8 @@
 @extends('layouts.base')
 
+@section('title', 'Porównanie wersji: ' . $fromObject->getTimestamp()->format('Y-m-d H:i:s')
+    . ' - ' . $toObject->getTimestamp()->format('Y-m-d H:i:s') . ' | Archiwum.io')
+
 @section('styles')
     <link href="{{ asset('css/diff.css') }}" rel="stylesheet">
 @endsection

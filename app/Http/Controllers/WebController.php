@@ -126,7 +126,8 @@ class WebController extends LaravelController
         $revisions = $this->repo->getUrlRevisions($url);
 
         return view('calendar', [
-            'revisions' => $revisions
+            'revisions' => $revisions,
+            'url' => $url
         ]);
     }
 

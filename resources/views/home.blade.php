@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Archiwum.io')
+
 @section('styles')
     <link href="{{ asset('css/home.css') }}" rel="stylesheet">
 @show
