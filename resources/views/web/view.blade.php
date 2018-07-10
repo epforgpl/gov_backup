@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', $object->getVersion()->getTitle() . ' (' . $object->getTimestamp()->format('Y-m-d H:i:s') . ') | Archiwum.io')
+
 @section('content')
 
 <?php /*
