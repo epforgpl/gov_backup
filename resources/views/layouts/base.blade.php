@@ -75,7 +75,7 @@
         @yield('content')
     </div>
 
-    <footer id="footer" class="bg-light fixed-bottom">
+    <footer id="footer" v-cloak class="bg-light fixed-bottom">
         <ul>
             <li><a href="{{ route('about') }}">O portalu</a></li>
             <!-- TODO: Uncomment when Magda writes content. <li><a href="{{ route('personal') }}">Dane osobowe</a></li> -->
