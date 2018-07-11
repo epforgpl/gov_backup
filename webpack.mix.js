@@ -15,6 +15,7 @@ mix.js('resources/assets/js/app.js', 'public/js');
 
 mix.sass('resources/assets/sass/app.scss', 'public/css')
     .sass('resources/assets/sass/home.scss', 'public/css')
-    .sass('resources/assets/sass/diff.scss', 'public/css');
+    .sass('resources/assets/sass/diff.scss', 'public/css')
+    .sass('resources/assets/sass/info.scss', 'public/css');
 
 mix.copy('resources/assets/img', 'public/img');
