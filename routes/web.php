@@ -40,7 +40,6 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-// TODO: Add InfoController & views.
 Route::get('/o-portalu', 'InfoController@about')->name('about');
 Route::get('/dane-osobowe', 'InfoController@personal')->name('personal');
 Route::get('/regulamin', 'InfoController@terms')->name('terms');
