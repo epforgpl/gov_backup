@@ -8,12 +8,11 @@
 @import "node_modules/bootstrap/scss/bootstrap";
 @import "node_modules/bootswatch/dist/cerulean/bootswatch";
 
+$govbackup-header-height: 75px;
+$govbackup-footer-height: 40px;
+
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   color: #444;
-}
-
-body {
-  padding-top: 60px;
 }
 
 a {
@@ -21,11 +20,15 @@ a {
   color: #1A79B0;
 }
 
+#app {
+  padding-top: $govbackup-header-height;
+}
+
 #nav-main {
+  height: $govbackup-header-height;
   padding-top: 0;
   padding-bottom: 0;
   font-size: .9rem;
-  height: 75px;
   overflow: hidden;
   .navbar-brand {
     img {
@@ -36,7 +39,7 @@ a {
 
 #web_iframe {
   width: 100%;
-  height: calc(100vh - 75px);
+  height: calc(100vh - #{$govbackup-header-height} - #{$govbackup-footer-height});
   margin: 0;
   padding: 0;
   border: none;
@@ -81,5 +84,52 @@ a {
     > div {
       padding: 0.2rem 0;
     }
+  }
+}
+
+footer {
+  height: $govbackup-footer-height;
+  color: #666;
+  width: 100%;
+  font-size: 0.75rem;
+  text-align: center;
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    li {
+      display: inline;
+      margin: 0 .4rem;
+      &:before {
+        content: " \B7 ";
+        font-size: 1.5rem;
+        color: #BBB;
+        position: relative;
+        top: .25rem;
+        left: -.25rem;
+      }
+      &:first-child {
+        &:before {
+          display: none;
+        }
+      }
+      a {
+        color: #999;
+      }
+    }
+  }
+
+  // .Cookie* rules are for EU cookie info banner, using https://github.com/apertureless/vue-cookie-law
+  .Cookie {
+    justify-content: center !important;
+    background-color: #FAFAFA !important;
+  }
+
+  .Cookie__content {
+    max-width: 700px;
+  }
+
+  .Cookie__button {
+    background-color: #2780E3 !important;
   }
 }

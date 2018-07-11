@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.base')
 
 @section('title', $object->getVersion()->getTitle() . ' (' . $object->getTimestamp()->format('Y-m-d H:i:s') . ') | Archiwum.io')
 
