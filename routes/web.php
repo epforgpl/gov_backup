@@ -36,10 +36,9 @@ Route::get('/diff/{timestamp_from}..{timestamp_to}/{type}/{url}', 'WebController
     ->where('type', 'html|html\\-formatted|html\\-rendered|text')
     ->name('diff');
 
-Auth::routes();
-
 Route::get('/home', 'HomeController@index')->name('home');
-
+Route::get('/sso-login', 'Auth\SsoController@login');
+Route::get('/sso-logout', 'Auth\SsoController@logout')->middleware('auth');
 Route::get('/o-portalu', 'InfoController@about')->name('about');
 Route::get('/dane-osobowe', 'InfoController@personal')->name('personal');
 Route::get('/regulamin', 'InfoController@terms')->name('terms');

@@ -43,29 +43,17 @@
             </button>
 
             <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
-                <ul class="navbar-nav">
-                    @if (Auth::guest())
-                        <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Zaloguj</a></li>
-                        <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Zarejestruj się</a></li>
-                    @else
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" data-toggle="dropdown"
-                               aria-haspopup="true" aria-expanded="false">
-                                {{ Auth::user()->name }}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                <a href="{{ route('logout') }}" class="dropdown-item"
-                                   onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                    Logout
-                                </a>
-
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                      style="display: none;">
-                                    {{ csrf_field() }}
-                                </form>
-                            </div>
+                <ul class="nav">
+                    @if (Illuminate\Support\Facades\Auth::check())
+                        <li class="nav-item">
+                            <a class="nav-link" href="/sso-logout">Wyloguj się</a>
                         </li>
                     @endif
+                    <li class="nav-item">
+                        {!!  Illuminate\Support\Facades\Auth::check()
+                        ? '<p class="nav-link" style="margin:0">' . Illuminate\Support\Facades\Auth::user()->name . '</p>'
+                        : '<a class="nav-link" href="/sso-login">Zaloguj się</a>' !!}
+                    </li>
                 </ul>
             </div>
         </div>
