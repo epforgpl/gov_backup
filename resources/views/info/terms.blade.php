@@ -59,13 +59,13 @@
                             internetowych pod adresami:
                             <ol>
                                 <li>https://archiwum.io/;</li>
-                                <li>https://rejestr.io/;</li>
+                                <li>https://epf.org.pl/;</li>
+                                <li>https://kodujdlapolski.pl/;</li>
+                                <li>https://mojepanstwo.pl/;</li>
                                 <li>https://mojeprawo.io/;</li>
-                                <li>https://sejmometr.pl/;</li>
-                                <li>http://mojepanstwo.pl/;</li>
-                                <li>http://koduj.dla.polski.pl;</li>
-                                <li>http://epf.org.pl.;</li>
-                                <li>https://pdfcee.pl.</li>
+                                <li>https://pdfcee.pl/;</li>
+                                <li>https://rejestr.io/;</li>
+                                <li>https://sejmometr.pl/</li>
                             </ol>
                         </li>
                         <li>Świadczenie usług drogą elektroniczną - wykonanie usług świadczonych bez jednoczesnej

@@ -39,13 +39,13 @@
                                     internetowych pod adresami:
                                     <ol>
                                         <li>https://archiwum.io/;</li>
-                                        <li>https://rejestr.io/;</li>
+                                        <li>https://epf.org.pl/;</li>
+                                        <li>https://kodujdlapolski.pl/;</li>
+                                        <li>https://mojepanstwo.pl/;</li>
                                         <li>https://mojeprawo.io/;</li>
-                                        <li>https://sejmometr.pl/;</li>
-                                        <li>http://mojepanstwo.pl/;</li>
-                                        <li>http://koduj.dla.polski.pl;</li>
-                                        <li>http://epf.org.pl.;</li>
-                                        <li>https://pdfcee.pl.</li>
+                                        <li>https://pdfcee.pl/;</li>
+                                        <li>https://rejestr.io/;</li>
+                                        <li>https://sejmometr.pl/</li>
                                     </ol>
                                 </li>
                                 <li>Użytkownik – każda osoba fizyczna odwiedzająca Serwis, w szczególności każda osoba
@@ -99,21 +99,22 @@
                                         </li>
                                     </ol>
                                 </li>
-                                <li>REJESTRACJA KONTA NA STRONIE INTERNETOWEJ REJESTR.IO, MOJEPRAWO.IO I SEJMOMETR.PL
+                                <li>REJESTRACJA KONTA NA STRONIE INTERNETOWEJ ARCHIWUM.IO, MOJEPRAWO.IO, REJESTR.IO
+                                    I SEJMOMETR.PL
                                     <ol>
-                                        <li>Dla potrzeb rejestracji konta na stronie internetowej https://rejestr.io/;
-                                            https://mojeprawo.io/ i https://sejmometr.pl/ Użytkownik jest proszony przez
-                                            Administratora o podanie adresu e-mail bądź identyfikatora w serwisie
-                                            Facebook.
+                                        <li>Dla potrzeb rejestracji konta na stronie internetowej https://archiwum.io,
+                                            https://mojeprawo.io/, https://rejestr.io/ i https://sejmometr.pl/ 
+                                            Użytkownik jest proszony przez Administratora o podanie adresu e-mail bądź
+                                            identyfikatora w serwisie Facebook lub Google.
                                         </li>
                                         <li>Ww. dane osobowe są przetwarzane w celu:
                                             <ol>
                                                 <li>obsługi konta oraz świadczenia usług dostępnych na stronie
-                                                    internetowej https://rejestr.io/; https://mojeprawo.io/ i
-                                                    https://sejmometr.pl/ na zasadach opisanych w regulaminie
-                                                    świadczenia usług drogą elektroniczną – podstawą prawną jest
-                                                    niezbędność przetwarzania do wykonania umowy (art. 6 ust. 1 lit b
-                                                    RODO);
+                                                    internetowej https://archiwum.io, https://mojeprawo.io/,
+                                                    https://rejestr.io/ i https://sejmometr.pl/ na zasadach opisanych w
+                                                    regulaminie świadczenia usług drogą elektroniczną – podstawą prawną
+                                                    jest niezbędność przetwarzania do wykonania umowy (art. 6 ust. 1
+                                                    lit b RODO);
                                                 </li>
                                                 <li>ustalenia lub dochodzenia ewentualnych roszczeń lub obrony przed
                                                     takimi roszczeniami przez Administratora – podstawą prawną
