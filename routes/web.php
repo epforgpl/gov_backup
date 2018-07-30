@@ -40,6 +40,5 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/sso-login', 'Auth\SsoController@login');
 Route::get('/sso-logout', 'Auth\SsoController@logout')->middleware('auth');
 Route::get('/o-portalu', 'InfoController@about')->name('about');
-Route::get('/dane-osobowe', 'InfoController@personal')->name('personal');
 Route::get('/regulamin', 'InfoController@terms')->name('terms');
 Route::get('/polityka-prywatnosci', 'InfoController@privacy')->name('privacy');

@@ -66,7 +66,6 @@
     <footer id="footer" v-cloak class="bg-light fixed-bottom">
         <ul>
             <li><a href="{{ route('about') }}">O portalu</a></li>
-            <!-- TODO: Uncomment when Magda writes content. <li><a href="{{ route('personal') }}">Dane osobowe</a></li> -->
             <li><a href="{{ route('terms') }}">Regulamin</a></li>
             <li><a href="{{ route('privacy') }}">Polityka prywatności</a></li>
         </ul>
