@@ -57,6 +57,11 @@ class StandardizeUrlTest extends TestCase
         $this->assertStandardUrl('http://domain.pl/raz/dwa/osiem','http://domain.pl/raz/dwa/trzy/file', 'siedem/../../osiem');
     }
 
+    public function testUrlContractingTooManyLevels()
+    {
+        $this->assertStandardUrl('http://domain.pl/','http://domain.pl/raz/dwa', '../../../../../../../');
+    }
+
     public function testUrlContractingSingleDot()
     {
         $this->assertStandardUrl('http://domain.pl/raz/dwa','http://domain.pl/', '/./raz/dwa');
