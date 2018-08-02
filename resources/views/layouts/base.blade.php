@@ -44,16 +44,6 @@
 
             <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
                 <ul class="nav">
-                    @if (Illuminate\Support\Facades\Auth::check())
-                        <li class="nav-item">
-                            <a class="nav-link" href="/sso-logout">Wyloguj się</a>
-                        </li>
-                    @endif
-                    <li class="nav-item">
-                        {!!  Illuminate\Support\Facades\Auth::check()
-                        ? '<p class="nav-link" style="margin:0">' . Illuminate\Support\Facades\Auth::user()->name . '</p>'
-                        : '<a class="nav-link" href="/sso-login">Zaloguj się</a>' !!}
-                    </li>
                 </ul>
             </div>
         </div>
