@@ -217,7 +217,7 @@ JSON;
     },
     "_source": [
         "data.web_objects_revisions.*",
-        "data.web_objects.url"
+        "data.web_objects.*"
     ]
 }
 JSON;
@@ -239,7 +239,7 @@ JSON;
                     $data['object_id'],
                     // version_id == null will be returned if this revision is a redirection
                     isset($data['version_id']) ? $data['version_id'] : null,
-                    $hit['_source']['data']['web_objects']['url']
+                    Reply::unparse_url($hit['_source']['data']['web_objects'])
                 ));
             }
         }
