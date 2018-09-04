@@ -15,7 +15,7 @@
             'timestamp' => $r->timestamp->format('YmdHis')]) }}">View</a></li>
         </ul>
     @empty
-        <div>No results!</div>
+        <div style="margin-top: 200px;">No results!</div>
     @endforelse
 
 @endsection

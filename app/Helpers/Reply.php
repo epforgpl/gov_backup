@@ -331,11 +331,13 @@ abstract class Reply
         for ($i = 0; $i < count($path);) {
             if ($path[$i] == '..') {
                 if ($i == 0) {
-                    throw new \InvalidArgumentException("Url contains invalid contracting '../' element.");
+                    // the case is there is nothing to contract from, example: `http://domain.pl/../img.png
+                    // browsers don't care about it so we neither
+                    array_shift($path);
+                } else {
+                    array_splice($path, $i - 1, 2);
+                    $i--;
                 }
-                array_splice($path, $i - 1, 2);
-
-                $i--;
             } else {
                 $i++;
             }
