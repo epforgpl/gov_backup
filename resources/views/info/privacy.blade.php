@@ -323,8 +323,9 @@
                                 </li>
                                 <li>PRAWA OSÓB, KTÓRYCH DANE DOTYCZĄ
                                     <ol>
-                                        <li>Każdej osobie, której dane dotyczą przysługuje prawo: dostępu do treści
-                                            danych oraz żądania ich sprostowania, usunięcia, ograniczenia przetwarzania,
+                                        <li>Każdej osobie, której dane dotyczą przysługuje prawo dostępu do treści
+                                            danych oraz – w przypadkach określonych przez RODO – prawo żądania ich
+                                            sprostowania, usunięcia, ograniczenia przetwarzania,
                                             prawo do przenoszenia danych oraz prawo wniesienia sprzeciwu względem
                                             przetwarzania danych, a także prawo wniesienia skargi do organu nadzorczego
                                             zajmującego się ochroną danych osobowych.
