@@ -36,6 +36,8 @@ Route::get('/diff/{timestamp_from}..{timestamp_to}/{type}/{url}', 'WebController
     ->where('type', 'html|html\\-formatted|html\\-rendered|text')
     ->name('diff');
 
+Route::get('/deleted-pages', 'WebController@deletedPages');
+
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/sso-login', 'Auth\SsoController@login');
 Route::get('/sso-logout', 'Auth\SsoController@logout')->middleware('auth');
