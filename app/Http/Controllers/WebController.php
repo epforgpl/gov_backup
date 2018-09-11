@@ -7,8 +7,9 @@ use App\Helpers\Diff;
 use App\Helpers\EpfHelpers;
 use App\Helpers\Reply;
 use App\Models\WebObjectRedirect;
-use App\Models\WebObjectVersion;
+use App\Repositories\DataRepository;
 use App\Repositories\WebRepository;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -22,11 +23,13 @@ class WebController extends LaravelController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     protected $repo;
+    protected $data;
     protected $request;
 
-    public function __construct(WebRepository $repo, Request $request)
+    public function __construct(WebRepository $repo, DataRepository $data, Request $request)
     {
         $this->repo = $repo;
+        $this->data = $data;
         $this->request = $request;
     }
 
@@ -318,6 +321,28 @@ class WebController extends LaravelController
     public function searchText($query, $filters = [])
     {
         return $this->repo->searchText($query, $filters);
+    }
+
+    public function deletedPages() {
+        $pages = Cache::get('deletedPages');
+
+        if ($pages == null) {
+            $pages = $this->data->deletedPages();
+
+            $pages = array_map(function ($r) {
+                $r['last_seen_link'] = EpfHelpers::route_slashed('view', [
+                    'url' => $r['url'],
+                    'timestamp' => $r['ok_cts']->format('YmdHis')
+                ]);
+                return $r;
+            }, $pages);
+
+            Cache::set('deletedPages', $pages, \DateInterval::createFromDateString("15 minutes"));
+        }
+
+        return view('deletedPages', [
+            'pages' => $pages
+        ]);
     }
 
     private function prepareUrl($url)
