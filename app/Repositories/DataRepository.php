@@ -46,7 +46,7 @@ ORDER BY missing.cts DESC
 LIMIT :limit;
 SQL;
 
-        $results = $this->conn->select(DB::raw($query), [
+        $results = $this->conn->select($this->conn->raw($query), [
             'limit' => 50
         ]);
 
